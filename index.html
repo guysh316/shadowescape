@@ -67,6 +67,13 @@
             pointer-events: auto;
             transform: translate(-50%, -50%) scale(1);
         }
+        
+        .ui-panel.half-visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+            max-width: 600px; /* Wider for shop and missions */
+        }
 
         .ui-panel h1, .ui-panel h2 {
             font-size: 2.5rem;
@@ -111,7 +118,7 @@
             box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5);
         }
 
-        .upgrade-card {
+        .upgrade-card, .shop-item, .mission-item {
             background: rgba(30, 30, 30, 0.9);
             border-radius: 10px;
             padding: 15px;
@@ -119,22 +126,34 @@
             cursor: pointer;
             border: 2px solid transparent;
             transition: border-color 0.2s ease;
+            text-align: right;
+            position: relative;
         }
-
-        .upgrade-card:hover {
-            border-color: #4a4a4a;
-        }
-
-        .upgrade-card h3 {
+        
+        .upgrade-card h3, .shop-item h3, .mission-item h3 {
             margin: 0 0 5px 0;
             color: #f0f0f0;
             font-size: 1.2rem;
         }
 
-        .upgrade-card p {
+        .upgrade-card p, .shop-item p, .mission-item p {
             margin: 0;
             font-size: 0.9rem;
             color: #aaa;
+        }
+        
+        .shop-item:hover, .upgrade-card:hover {
+            border-color: #4a4a4a;
+        }
+        
+        .shop-item .price, .mission-item .status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
         }
 
         #hud-container {
@@ -172,6 +191,23 @@
         #hud-left, #hud-right {
             display: flex;
             gap: 10px;
+        }
+        
+        #hud-center {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #wave-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #wave-timer {
+            font-size: 1.2rem;
+            font-weight: bold;
         }
 
         #shield-bar {
@@ -312,6 +348,7 @@
           box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2);
           transition: all 0.2s ease;
           font-weight: bold;
+          display: none; /* Default hidden for desktop */
         }
         
         #shootBtn:hover {
@@ -322,7 +359,6 @@
             transform: scale(0.95);
         }
         
-
         /* Responsive CSS for smaller screens */
         @media (max-width: 600px) {
             #game-container {
@@ -364,15 +400,44 @@
                 bottom: 20px;
                 left: 20px;
             }
-            /* Move shoot button for better mobile usability */
+
+            /* Show shoot button on mobile and position it */
             #shootBtn {
+                display: block; /* Show the button on mobile */
                 bottom: 20px;
                 right: 20px;
-                transform: translateX(0); /* Re-adjust for mobile */
+                transform: translateX(0);
                 font-size: 1rem;
                 padding: 10px 15px;
             }
         }
+        
+        .mission-item.completed {
+            background: rgba(0, 100, 0, 0.9);
+            border-color: #00ff00;
+            color: #fff;
+        }
+
+        #missions-menu, #shop-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #missions-list, #shop-items {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        @media (min-width: 600px) {
+            #missions-list, #shop-items {
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -384,6 +449,7 @@
             <h1>Shadow Escape</h1>
             <p>فرار از سایه‌ها، جمع‌آوری نور</p>
             <button class="button" id="play-button">شروع بازی</button>
+            <button class="button" id="shop-button">فروشگاه</button>
             <button class="button" id="tutorial-button">آموزش</button>
             <button class="button" id="settings-button">تنظیمات</button>
             <p style="margin-top: 20px;">بالاترین امتیاز: <span id="highscore-display">0</span></p>
@@ -415,6 +481,22 @@
             <p>انتخاب یک ارتقاء برای موج بعدی:</p>
             <div id="upgrade-options"></div>
             <button class="button" id="magical-upgrade-button">✨ ارتقاء جادویی</button>
+            <button class="button" id="show-missions-button">ماموریت‌ها</button>
+        </div>
+        
+        <div id="missions-menu" class="ui-panel half-visible">
+            <h2>ماموریت‌ها</h2>
+            <p>جوایز خود را با تکمیل این ماموریت‌ها دریافت کنید.</p>
+            <div id="missions-list"></div>
+            <button class="button" id="back-from-missions">بازگشت</button>
+        </div>
+
+        <div id="shop-menu" class="ui-panel half-visible">
+            <h2>فروشگاه</h2>
+            <p>امتیاز خود را خرج کنید تا ارتقاءهای دائمی بخرید.</p>
+            <div id="shop-items"></div>
+            <p>امتیاز فعلی: <span id="shop-score">0</span></p>
+            <button class="button" id="back-to-main-from-shop">بازگشت</button>
         </div>
 
         <div id="settings-menu" class="ui-panel">
@@ -440,13 +522,19 @@
                     <div>امتیاز: <span id="score">0</span></div>
                     <div>موج: <span id="wave">1</span></div>
                 </div>
+                <div id="hud-center">
+                    <div id="wave-info">
+                        <div>زمان باقیمانده:</div>
+                        <div id="wave-timer"></div>
+                    </div>
+                </div>
                 <div id="hud-right">
                     <div style="display: flex; align-items: center;">سپر: <div id="shield-bar"><div id="shield-progress"></div></div><span id="shield-time">0</span></div>
                     <div>کامبو: <span id="combo-count">0</span></div>
                 </div>
             </div>
         </div>
-
+        
         <div id="boss-health-bar">
             <div id="boss-health-progress"></div>
         </div>
@@ -487,6 +575,7 @@
                 comboNearMissDistance: 40,
                 projectileSpeed: 400,
                 fireRate: 0.3,
+                damage: 20,
             },
             enemies: {
                 baseRadius: 16,
@@ -510,6 +599,8 @@
                 linearGrowth: 4,
                 wavePauseDuration: 3,
                 bossWaveInterval: 5,
+                waveDuration: 30,
+                waveDurationGrowth: 5,
             },
             upgrades: {
                 optionCount: 3,
@@ -518,33 +609,32 @@
                     { name: 'سپر', effect: (player) => { player.shieldTime += 4; player.maxShieldTime += 4; }, description: 'افزایش زمان سپر (+4s)' },
                     { name: 'امتیاز', effect: (player) => gameManager.score += 150, description: 'امتیاز فوری (+150)' },
                     { name: 'کامبو', effect: (player) => player.comboMultiplier += 0.3, description: 'افزایش ضریب کامبو' },
+                    { name: 'نرخ شلیک', effect: (player) => player.fireRate *= 1.2, description: 'افزایش نرخ شلیک' },
                 ],
                 offlineUpgrades: [
                     { name: 'سپر ویژه', type: 'shield', description: 'افزایش زمان سپر (+8s)' },
                     { name: 'انرژی نور', type: 'score', description: 'امتیاز فوری (+400)' },
                 ]
             },
+            shop: [
+                { name: 'افزایش سرعت', price: 200, id: 'speed_up', effect: (player) => player.baseSpeed *= 1.1 },
+                { name: 'سپر بیشتر', price: 150, id: 'shield_up', effect: (player) => player.maxShieldTime += 1 },
+                { name: 'افزایش آسیب', price: 300, id: 'damage_up', effect: (player) => player.damage *= 1.2 },
+            ],
+            missions: [
+                { id: 'kill10chasers', type: 'kill', enemy: 'chaser', count: 10, reward: 100, completed: false, description: 'کشتن ۱۰ دشمن تعقیب‌کننده' },
+                { id: 'get500score', type: 'score', amount: 500, reward: 50, completed: false, description: 'رسیدن به امتیاز ۵۰۰' },
+                { id: 'kill50enemies', type: 'kill', enemy: 'any', count: 50, reward: 150, completed: false, description: 'کشتن ۵۰ دشمن' },
+            ],
+            projectiles: {
+                tripleShotAngle: 15, // degrees
+            },
             particles: {
                 playerGlowDensity: 5,
                 itemGlowDensity: 3,
                 maxParticles: 400,
             },
-            audio: {
-                ambienceVolume: 0.5,
-                sfxVolume: 0.7,
-                sfxUrls: {
-                    pickup: 'key-176034.mp3',
-                    hit: 'Metal Hit.mp3',
-                    freeze: 'coldsnap.wav',
-                    slow_mo: 'coldsnap.wav',
-                    ambience: '544416__zhr__background-music.mp3',
-                    player_shoot: 'SHOOT007.mp3',
-                    boss_hit: 'sfx_hurt.ogg',
-                    boss_explosion: 'Battle in the winter.mp3',
-                    boss_spawn: 'theircoming3.ogg',
-                }
-            }
-        };
+        audio: { ambienceVolume: 0.5, sfxVolume: 0.7, sfxUrls: { pickup: 'key-176034.mp3', hit: 'Metal Hit.mp3', freeze: 'coldsnap.wav', slow_mo: 'coldsnap.wav', ambience: '544416__zhr__background-music.mp3', player_shoot: 'SHOOT007.mp3', boss_hit: 'sfx_hurt.ogg', boss_explosion: 'Battle in the winter.mp3', boss_spawn: 'theircoming3.ogg', } } };
 
         // Global variables, consolidated to avoid redeclaration errors
         let screenShakeX = 0;
@@ -563,10 +653,12 @@
         let playerLastShotTime = 0;
         const scoreThreshold = 1500;
         let waveTimer = 0;
-        let activeWaveEnemies = 0;
         let mousePos = { x: 0, y: 0 };
         let highscore = localStorage.getItem('shadow_escape_highscore') || 0;
-        // Removed continuousSpawnMode variable
+        let enemySpawnTimer = 0;
+        let currentWaveDuration = 0;
+        let missions = JSON.parse(localStorage.getItem('missions')) || config.missions;
+        let shopItems = JSON.parse(localStorage.getItem('shopItems')) || config.shop;
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -589,6 +681,8 @@
         const tutorialMenu = document.getElementById('tutorial-menu');
         const gameOverMenu = document.getElementById('game-over-menu');
         const upgradeMenu = document.getElementById('upgrade-menu');
+        const missionsMenu = document.getElementById('missions-menu');
+        const shopMenu = document.getElementById('shop-menu');
         const settingsMenu = document.getElementById('settings-menu');
         const hud = document.getElementById('hud');
         const comboDisplay = document.getElementById('combo-display');
@@ -599,6 +693,7 @@
         const shieldProgressBar = document.getElementById('shield-progress');
         const bossHealthBar = document.getElementById('boss-health-bar');
         const bossHealthProgress = document.getElementById('boss-health-progress');
+        const waveTimerDisplay = document.getElementById('wave-timer');
         
         // D-pad button elements for mobile
         const shootBtn = document.getElementById('shootBtn');
@@ -608,6 +703,7 @@
         let isPaused = false;
         let player, enemies, items, particles, projectiles;
         let audioManager;
+        let obstacles = []; // آرایه برای نگهداری موانع
 
         // Ensure mousePos is initialized properly based on new canvas size
         window.addEventListener('load', () => {
@@ -804,7 +900,7 @@
         // Game Objects (Player, Enemy, Item, Particle)
         // =================================================================
         class PlayerProjectile {
-            constructor(x, y, direction) {
+            constructor(x, y, direction, damage) {
                 this.x = x;
                 this.y = y;
                 this.direction = direction;
@@ -812,11 +908,12 @@
                 this.radius = 3;
                 this.color = '#fff';
                 this.isDead = false;
+                this.damage = damage;
             }
             update(dt) {
                 this.x += this.direction.x * this.speed * dt;
                 this.y += this.direction.y * this.speed * dt;
-                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                if (this.x < -100 || this.x > canvas.width + 100 || this.y < -100 || this.y > canvas.height + 100) {
                     this.isDead = true;
                 }
             }
@@ -828,6 +925,95 @@
                 ctx.shadowBlur = 10;
                 ctx.fill();
                 ctx.shadowBlur = 0;
+            }
+        }
+        
+        class TripleShotProjectile extends PlayerProjectile {
+             constructor(x, y, direction, damage) {
+                super(x, y, direction, damage);
+                this.color = '#ff0';
+                this.radius = 4;
+            }
+        }
+        
+        class LaserProjectile extends PlayerProjectile {
+            constructor(x, y, direction, damage) {
+                super(x, y, direction, damage);
+                this.length = 200;
+                this.width = 5;
+                this.color = '#0f0';
+                this.isDead = false;
+                this.hitEnemies = new Set();
+            }
+            update(dt) {
+                this.x += this.direction.x * this.speed * dt;
+                this.y += this.direction.y * this.speed * dt;
+                if (this.x < -this.length || this.x > canvas.width + this.length || this.y < -this.length || this.y > canvas.height + this.length) {
+                    this.isDead = true;
+                }
+            }
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                const angle = Math.atan2(this.direction.y, this.direction.x);
+                ctx.rotate(angle);
+                
+                const gradient = ctx.createLinearGradient(0, -this.width/2, this.length, this.width/2);
+                gradient.addColorStop(0, 'rgba(0, 255, 0, 0.8)');
+                gradient.addColorStop(1, 'rgba(0, 255, 0, 0.1)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, -this.width/2, this.length, this.width);
+                ctx.restore();
+            }
+        }
+        
+        class BombProjectile extends PlayerProjectile {
+            constructor(x, y, direction, damage) {
+                super(x, y, direction, damage);
+                this.color = '#f00';
+                this.radius = 8;
+                this.isExploded = false;
+                this.explosionRadius = 0;
+                this.maxExplosionRadius = 100;
+                this.explosionDuration = 0.3;
+                this.explosionTimer = 0;
+            }
+            update(dt) {
+                if (this.isExploded) {
+                    this.explosionTimer += dt;
+                    this.explosionRadius = (this.explosionTimer / this.explosionDuration) * this.maxExplosionRadius;
+                    if (this.explosionTimer >= this.explosionDuration) {
+                        this.isDead = true;
+                    }
+                } else {
+                    this.x += this.direction.x * this.speed * dt;
+                    this.y += this.direction.y * this.speed * dt;
+                    // check collision with enemies to trigger explosion
+                    for (const enemy of enemies) {
+                        const dx = this.x - enemy.x;
+                        const dy = this.y - enemy.y;
+                        const dist = Math.hypot(dx, dy);
+                        if (dist < this.radius + enemy.radius) {
+                            this.isExploded = true;
+                            // Trigger explosion on hit
+                            break;
+                        }
+                    }
+                }
+            }
+            draw(ctx) {
+                if (this.isExploded) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.explosionRadius, 0, Math.PI * 2);
+                    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.explosionRadius);
+                    gradient.addColorStop(0, 'rgba(255, 0, 0, 0.8)');
+                    gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                } else {
+                    super.draw(ctx);
+                }
             }
         }
 
@@ -850,10 +1036,19 @@
                 this.maxShieldTime = config.player.shieldTime;
                 this.isShooting = false;
                 this.shootCooldown = 0;
+                this.projectileType = 'basic'; // 'basic', 'triple', 'laser', 'bomb'
+                this.damage = config.player.damage;
 
-                this.speed *= (persistentUpgrades.speed || 1);
-                this.maxShieldTime *= (persistentUpgrades.shield || 1);
+                // Apply persistent upgrades
+                this.speed = config.player.baseSpeed * (persistentUpgrades.speed || 1);
+                this.maxShieldTime = config.player.shieldTime * (persistentUpgrades.shield || 1);
+                this.damage = config.player.damage * (persistentUpgrades.damage || 1);
                 this.shieldTime = this.maxShieldTime;
+            }
+            
+            // Function to upgrade projectile type
+            setProjectileType(type) {
+                this.projectileType = type;
             }
 
             shoot() {
@@ -862,9 +1057,29 @@
                     const dy = mousePos.y - this.y;
                     const dist = Math.hypot(dx, dy);
                     const direction = {x: dx/dist, y: dy/dist};
-                    playerProjectiles.push(new PlayerProjectile(this.x, this.y, direction));
+                    
+                    if (this.projectileType === 'basic') {
+                        playerProjectiles.push(new PlayerProjectile(this.x, this.y, direction, this.damage));
+                        this.shootCooldown = 1 / config.player.fireRate;
+                    } else if (this.projectileType === 'triple') {
+                        const baseAngle = Math.atan2(direction.y, direction.x);
+                        const angle1 = baseAngle - (config.projectiles.tripleShotAngle * Math.PI / 180);
+                        const angle2 = baseAngle;
+                        const angle3 = baseAngle + (config.projectiles.tripleShotAngle * Math.PI / 180);
+                        
+                        playerProjectiles.push(new TripleShotProjectile(this.x, this.y, {x: Math.cos(angle1), y: Math.sin(angle1)}, this.damage));
+                        playerProjectiles.push(new TripleShotProjectile(this.x, this.y, {x: Math.cos(angle2), y: Math.sin(angle2)}, this.damage));
+                        playerProjectiles.push(new TripleShotProjectile(this.x, this.y, {x: Math.cos(angle3), y: Math.sin(angle3)}, this.damage));
+                        this.shootCooldown = 1 / (config.player.fireRate * 0.7); // Slower fire rate for triple shot
+                    } else if (this.projectileType === 'laser') {
+                        playerProjectiles.push(new LaserProjectile(this.x, this.y, direction, this.damage));
+                        this.shootCooldown = 1 / (config.player.fireRate * 0.5);
+                    } else if (this.projectileType === 'bomb') {
+                        playerProjectiles.push(new BombProjectile(this.x, this.y, direction, this.damage * 2));
+                        this.shootCooldown = 1 / (config.player.fireRate * 0.3);
+                    }
+                    
                     if (audioManager) audioManager.playSfx('player_shoot');
-                    this.shootCooldown = 1 / config.player.fireRate;
                 }
             }
 
@@ -875,7 +1090,7 @@
                 }
 
                 this.targetSpeed = this.speed;
-
+                
                 const previousShieldState = this.isShieldActive;
                 this.isShieldActive = this.shieldTime > 0;
                 if (this.isShieldActive) {
@@ -1000,15 +1215,45 @@
                 this.isFrozen = false;
                 this.isFading = false;
                 this.shifterTimer = 0;
+                this.teleportTimer = Math.random() * 3 + 2;
                 this.direction = {x: 0, y: 0};
                 this.shooterTimer = 0;
-                this.isBoss = (type === 'boss'); // Corrected: Set isBoss flag based on type
+                this.isBoss = (type === 'boss');
                 this.health = 1;
                 this.maxHealth = 1;
+                this.damageReduction = 0; // for armored enemies
 
-                if (type === 'wanderer' || type === 'shifter') {
-                    const ang = Math.random() * Math.PI * 2;
-                    this.direction = { x: Math.cos(ang), y: Math.sin(ang) };
+                switch (type) {
+                    case 'armored':
+                        this.health = 50;
+                        this.maxHealth = 50;
+                        this.color = '#555';
+                        this.damageReduction = 0.8;
+                        break;
+                    case 'teleporter':
+                        this.health = 15;
+                        this.maxHealth = 15;
+                        this.speed = 100;
+                        this.color = '#8a2be2';
+                        this.glowColor = '#8a2be2';
+                        break;
+                    case 'pattern_shooter':
+                        this.health = 20;
+                        this.maxHealth = 20;
+                        this.color = '#f00';
+                        this.shooterTimer = 2;
+                        this.patternShotTimer = 0;
+                        this.currentPattern = 'spiral';
+                        break;
+                    case 'wanderer':
+                    case 'shifter':
+                        const ang = Math.random() * Math.PI * 2;
+                        this.direction = { x: Math.cos(ang), y: Math.sin(ang) };
+                        break;
+                    default:
+                        this.health = 10;
+                        this.maxHealth = 10;
+                        break;
                 }
             }
 
@@ -1018,6 +1263,8 @@
 
                 switch (this.type) {
                     case 'chaser':
+                    case 'armored':
+                    case 'splinterer':
                         const dx = player.x - this.x;
                         const dy = player.y - this.y;
                         const dist = Math.hypot(dx, dy);
@@ -1087,13 +1334,47 @@
                             }
                         }
                         break;
-                    case 'splinterer':
-                        const sDx = player.x - this.x;
-                        const sDy = player.y - this.y;
-                        const sDist = Math.hypot(sDx, sDy);
-                        if (sDist > 0) {
-                            this.x += (sDx / sDist) * this.speed * dt;
-                            this.y += (sDy / sDist) * this.speed * dt;
+                    case 'teleporter':
+                        this.teleportTimer -= dt;
+                        if (this.teleportTimer <= 0) {
+                            // Particle effect before teleport
+                            for(let i=0; i<20; i++) {
+                                particles.push(getParticle(this.x, this.y, {x: Math.random()*2-1, y: Math.random()*2-1}, '#8a2be2', Math.random()*3+1, 0.5));
+                            }
+                            this.x = Math.random() * canvas.width;
+                            this.y = Math.random() * canvas.height;
+                            // Particle effect after teleport
+                            for(let i=0; i<20; i++) {
+                                particles.push(getParticle(this.x, this.y, {x: Math.random()*2-1, y: Math.random()*2-1}, '#8a2be2', Math.random()*3+1, 0.5));
+                            }
+                            this.teleportTimer = Math.random() * 3 + 2;
+                        }
+                        break;
+                    case 'pattern_shooter':
+                        this.shooterTimer -= dt;
+                        if (this.shooterTimer <= 0) {
+                            if (this.currentPattern === 'spiral') {
+                                this.patternShotTimer = 0;
+                                this.currentPattern = 'circle';
+                            } else {
+                                this.patternShotTimer = 0;
+                                this.currentPattern = 'spiral';
+                            }
+                            this.shooterTimer = 3;
+                        }
+                        this.patternShotTimer += dt;
+                        if (this.currentPattern === 'spiral') {
+                             const angle = this.patternShotTimer * 10;
+                             if(Math.sin(angle) > 0.95){
+                                 projectiles.push(new Projectile(this.x, this.y, {x: Math.cos(angle), y: Math.sin(angle)}, 200));
+                             }
+                        } else if (this.currentPattern === 'circle') {
+                             if(this.patternShotTimer < 0.1) {
+                                 for (let i = 0; i < 8; i++) {
+                                     const angle = (i / 8) * Math.PI * 2;
+                                     projectiles.push(new Projectile(this.x, this.y, {x: Math.cos(angle), y: Math.sin(angle)}, 250));
+                                 }
+                             }
                         }
                         break;
                     case 'boss':
@@ -1284,6 +1565,42 @@
                 ctx.restore();
             }
         }
+        
+        class Obstacle {
+            constructor(x, y, width, height, isMovable = false) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.isMovable = isMovable;
+                this.color = '#1a1a1a';
+                this.direction = {x: 0, y: 0};
+                if (isMovable) {
+                    const ang = Math.random() * Math.PI * 2;
+                    this.direction = {x: Math.cos(ang), y: Math.sin(ang)};
+                }
+            }
+
+            update(dt) {
+                if (this.isMovable) {
+                    this.x += this.direction.x * 50 * dt;
+                    this.y += this.direction.y * 50 * dt;
+
+                    // Bounce off walls
+                    if (this.x < 0 || this.x + this.width > canvas.width) {
+                        this.direction.x *= -1;
+                    }
+                    if (this.y < 0 || this.y + this.height > canvas.height) {
+                        this.direction.y *= -1;
+                    }
+                }
+            }
+
+            draw(ctx) {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
 
         // =================================================================
         // Game Manager
@@ -1304,11 +1621,17 @@
                 particles = [];
                 projectiles = [];
                 playerProjectiles = [];
+                enemySpawnTimer = 0;
+                currentWaveDuration = 0;
+                obstacles = [];
+                
+                // reset missions on new game
+                missions = config.missions.map(m => ({ ...m, completed: false }));
+                localStorage.setItem('missions', JSON.stringify(missions));
+
 
                 player = new Player(canvas.width / 2, canvas.height / 2);
                 this.updateHUD();
-
-                this.currentMissions = [];
             },
             updateHUD() {
                 const scoreElement = document.getElementById('score');
@@ -1333,16 +1656,39 @@
                     bossHealthBar.style.opacity = 0;
                 }
             },
+            updateMissions(type, enemyType = null, amount = 0) {
+                missions.forEach(mission => {
+                    if (mission.completed) return;
+                    
+                    if (mission.type === 'kill' && type === 'kill') {
+                        if (mission.enemy === 'any' || mission.enemy === enemyType) {
+                            mission.count--;
+                            if (mission.count <= 0) {
+                                mission.completed = true;
+                                this.score += mission.reward;
+                                showMessage(`ماموریت تکمیل شد! <br> ${mission.description}`);
+                            }
+                        }
+                    } else if (mission.type === 'score' && type === 'score') {
+                        if (this.score >= mission.amount) {
+                            mission.completed = true;
+                            this.score += mission.reward;
+                            showMessage(`ماموریت تکمیل شد! <br> ${mission.description}`);
+                        }
+                    }
+                });
+                localStorage.setItem('missions', JSON.stringify(missions));
+            },
             startWave() {
                 this.isWaveActive = true;
-                this.waveStartTime = Date.now();
-                activeWaveEnemies = 0;
-                
+                currentWaveDuration = config.waves.waveDuration + this.wave * config.waves.waveDurationGrowth;
+                enemySpawnTimer = 0;
+
                 if (this.wave % config.waves.bossWaveInterval === 0) {
                     this.spawnBoss();
                 } else {
-                    const totalEnemies = config.waves.baseEnemyCount + this.wave * config.waves.linearGrowth;
-                    this.spawnEnemies(totalEnemies);
+                    const initialEnemies = config.waves.minEnemies;
+                    this.spawnInitialEnemies(initialEnemies);
                 }
             },
             spawnBoss() {
@@ -1354,8 +1700,8 @@
                 enemies.push(boss);
                 if (audioManager) audioManager.playSfx('boss_spawn');
             },
-            spawnEnemies(count) {
-                const enemyTypes = ['chaser', 'wanderer', 'shifter', 'bomber', 'shooter', 'splinterer'];
+            spawnInitialEnemies(count) {
+                const enemyTypes = ['chaser', 'wanderer', 'shifter', 'bomber', 'shooter', 'splinterer', 'teleporter', 'armored', 'pattern_shooter'];
                 for (let i = 0; i < count; i++) {
                     const side = Math.floor(Math.random() * 4);
                     let x, y;
@@ -1367,7 +1713,6 @@
                     }
                     const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
                     enemies.push(new Enemy(x, y, type));
-                    activeWaveEnemies++;
                 }
             },
             spawnItems() {
@@ -1397,8 +1742,15 @@
                 upgradeMenu.classList.add('visible');
                 const upgradeOptionsDiv = document.getElementById('upgrade-options');
                 upgradeOptionsDiv.innerHTML = '';
-
-                const availableUpgrades = [...config.upgrades.options];
+                
+                // Add an option to upgrade projectile type
+                const projectileUpgradeOption = {
+                    name: 'شلیک سه‌تایی',
+                    description: 'شلیک سه تیر به جای یک تیر با زاویه ±۱۵ درجه',
+                    effect: (player) => player.setProjectileType('triple')
+                };
+                
+                const availableUpgrades = [...config.upgrades.options, projectileUpgradeOption];
                 for (let i = 0; i < config.upgrades.optionCount; i++) {
                     if (availableUpgrades.length === 0) break;
                     const randomIndex = Math.floor(Math.random() * availableUpgrades.length);
@@ -1417,7 +1769,61 @@
                     });
                     upgradeOptionsDiv.appendChild(card);
                 }
-            }
+            },
+            showShopScreen() {
+                isPaused = true;
+                hideAllPanels();
+                shopMenu.classList.add('half-visible');
+                const shopItemsDiv = document.getElementById('shop-items');
+                shopItemsDiv.innerHTML = '';
+                
+                const shopScore = document.getElementById('shop-score');
+                shopScore.textContent = Math.round(this.score);
+
+                shopItems.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'shop-item';
+                    card.innerHTML = `<h3>${item.name}</h3><p>${item.description}</p><span class="price">${item.price}</span>`;
+                    
+                    const isPurchased = persistentUpgrades[item.id];
+                    if (isPurchased) {
+                        card.classList.add('purchased');
+                        card.innerHTML = `<h3>${item.name}</h3><p>${item.description}</p><span class="price">خریداری شد</span>`;
+                        card.style.cursor = 'not-allowed';
+                    } else {
+                        card.addEventListener('click', () => {
+                            if (this.score >= item.price) {
+                                this.score -= item.price;
+                                item.effect(player);
+                                persistentUpgrades[item.id] = true;
+                                localStorage.setItem('persistentUpgrades', JSON.stringify(persistentUpgrades));
+                                this.showShopScreen(); // Reload shop to show item as purchased
+                            } else {
+                                showMessage('امتیاز کافی برای خرید این آیتم ندارید.');
+                            }
+                        });
+                    }
+                    
+                    shopItemsDiv.appendChild(card);
+                });
+            },
+            showMissionsScreen() {
+                isPaused = true;
+                hideAllPanels();
+                missionsMenu.classList.add('half-visible');
+                const missionsListDiv = document.getElementById('missions-list');
+                missionsListDiv.innerHTML = '';
+
+                missions.forEach(mission => {
+                    const card = document.createElement('div');
+                    card.className = 'mission-item';
+                    card.innerHTML = `<h3>${mission.description}</h3><span class="status">${mission.completed ? 'تکمیل شد' : 'در حال انجام'}</span>`;
+                    if (mission.completed) {
+                        card.classList.add('completed');
+                    }
+                    missionsListDiv.appendChild(card);
+                });
+            },
         };
 
         // =================================================================
@@ -1428,7 +1834,7 @@
         }
 
         function hideAllPanels() {
-            [mainMenu, tutorialMenu, gameOverMenu, upgradeMenu, settingsMenu].forEach(panel => panel.classList.remove('visible'));
+            [mainMenu, tutorialMenu, gameOverMenu, upgradeMenu, settingsMenu, shopMenu, missionsMenu].forEach(panel => panel.classList.remove('visible', 'half-visible'));
         }
 
         function showPanel(panel) {
@@ -1693,6 +2099,7 @@
                                 enemies.push(new Enemy(enemy.x, enemy.y, 'chaser'));
                              }
                         }
+                        gameManager.updateMissions('kill', enemy.type);
                         enemies.splice(i, 1);
                         if (audioManager) audioManager.playSfx('hit');
                         startScreenShake();
@@ -1722,6 +2129,16 @@
                     }
                 }
             }
+            
+            // Player vs Obstacles
+            for (const obstacle of obstacles) {
+                const dx = player.x - Math.max(obstacle.x, Math.min(player.x, obstacle.x + obstacle.width));
+                const dy = player.y - Math.max(obstacle.y, Math.min(player.y, obstacle.y + obstacle.height));
+                if (Math.hypot(dx, dy) < player.radius) {
+                    endGame();
+                    return;
+                }
+            }
 
             // Player Projectiles vs Enemies
             for (let i = playerProjectiles.length - 1; i >= 0; i--) {
@@ -1733,12 +2150,24 @@
                     const dist = Math.hypot(dx, dy);
 
                     if (dist < p.radius + e.radius) {
-                        p.isDead = true;
-
-                        if (e.isBoss) {
-                            e.health -= 10;
-                            if (audioManager) audioManager.playSfx('boss_hit'); // Guarded audio call
-                            if (e.health <= 0) {
+                        // Handle collision based on projectile type
+                        if (p instanceof BombProjectile && p.isExploded) {
+                            const explDist = Math.hypot(p.x - e.x, p.y - e.y);
+                            if (explDist < p.explosionRadius) {
+                                e.health -= p.damage * (1 - e.damageReduction);
+                            }
+                        } else if (p instanceof LaserProjectile) {
+                            if (!p.hitEnemies.has(e)) {
+                                e.health -= p.damage * (1 - e.damageReduction);
+                                p.hitEnemies.add(e);
+                            }
+                        } else {
+                            e.health -= p.damage * (1 - e.damageReduction);
+                            p.isDead = true;
+                        }
+                        
+                        if (e.health <= 0) {
+                            if (e.isBoss) {
                                 gameManager.score += 1000;
                                 startScreenShake();
                                 if (audioManager) audioManager.playSfx('boss_explosion'); // Guarded audio call
@@ -1748,19 +2177,14 @@
                                      items.push(new Item(e.x + Math.random()*50-25, e.y + Math.random()*50-25, 'crystal'));
                                 }
                                 showMessage('باس شکست خورد! یک ارتقاء ویژه دریافت کردید.');
-                                gameManager.wave++;
-                                isPaused = true;
-                                setTimeout(() => {
-                                    hideAllPanels();
-                                    gameActive = true;
-                                    isPaused = false;
-                                    gameManager.startWave();
-                                }, 3000);
+                                gameManager.isWaveActive = false;
+                                waveTimer = config.waves.wavePauseDuration;
+                            } else {
+                                gameManager.score += 20;
+                                gameManager.updateMissions('kill', e.type);
+                                enemies.splice(j, 1);
+                                if (audioManager) audioManager.playSfx('hit');
                             }
-                        } else {
-                            enemies.splice(j, 1);
-                            gameManager.score += 20;
-                            if (audioManager) audioManager.playSfx('hit'); // Guarded audio call
                         }
                     }
                 }
@@ -1804,6 +2228,32 @@
                 }
             }
         }
+        
+        function spawnContinuousEnemies(dt) {
+            if (gameManager.isWaveActive && !boss) {
+                enemySpawnTimer -= dt;
+                if (enemySpawnTimer <= 0) {
+                    // افزایش تنوع و تعداد دشمنان با پیشرفت موج
+                    const enemyTypes = ['chaser', 'wanderer', 'shifter', 'bomber', 'shooter', 'splinterer', 'teleporter', 'armored', 'pattern_shooter'];
+                    const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+                    
+                    const side = Math.floor(Math.random() * 4);
+                    let x, y;
+                    switch (side) {
+                        case 0: x = -config.enemies.spawnDistance; y = Math.random() * canvas.height; break;
+                        case 1: x = canvas.width + config.enemies.spawnDistance; y = Math.random() * canvas.height; break;
+                        case 2: x = Math.random() * canvas.width; y = -config.enemies.spawnDistance; break;
+                        case 3: x = Math.random() * canvas.width; y = canvas.height + config.enemies.spawnDistance; break;
+                    }
+                    enemies.push(new Enemy(x, y, type));
+                    
+                    // نرخ اسپاون را بر اساس موج فعلی تنظیم کنید
+                    const spawnRate = config.enemies.spawnRatePerWave / (1 + gameManager.wave * 0.1);
+                    enemySpawnTimer = spawnRate;
+                }
+            }
+        }
+
 
         function endGame() {
             gameActive = false;
@@ -1836,10 +2286,8 @@
         function gameLoop(timestamp) {
             if (gameActive) {
                 document.body.style.cursor = 'none';
-                if (shootBtn) shootBtn.style.display = 'block';
             } else {
                 document.body.style.cursor = 'default';
-                if (shootBtn) shootBtn.style.display = 'none';
             }
 
             if (!gameActive) {
@@ -1880,6 +2328,10 @@
                 player.update(dt, inputVector);
                 gameManager.score += dt * (1 + player.comboBonus) * scoreMultiplier;
             }
+            
+            gameManager.updateMissions('score');
+
+            spawnContinuousEnemies(dt);
 
             enemies.forEach(enemy => {
                 if (player) {
@@ -1889,6 +2341,7 @@
             items.forEach(item => item.update(dt));
             projectiles.forEach(p => p.update(dt));
             playerProjectiles.forEach(p => p.update(dt));
+            obstacles.forEach(o => o.update(dt));
 
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update(dt);
@@ -1903,16 +2356,17 @@
             particles = particles.filter(p => p.life > 0);
             projectiles = projectiles.filter(p => !p.isDead);
             playerProjectiles = playerProjectiles.filter(p => !p.isDead);
-
+            
             if (player) {
                 handleCollisions();
             }
 
             gameManager.updateHUD();
 
-            // Main game loop logic for waves and progression
             if (gameManager.isWaveActive) {
-                if (enemies.length === 0 && !boss) {
+                currentWaveDuration -= dt;
+                waveTimerDisplay.textContent = Math.max(0, currentWaveDuration).toFixed(0);
+                if (currentWaveDuration <= 0 && !boss) {
                     gameManager.isWaveActive = false;
                     waveTimer = config.waves.wavePauseDuration;
                 }
@@ -1929,7 +2383,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             if (player) {
-                const waveHue = (gameManager.wave * 15) % 360;
+                const waveHue = (gameManager.wave * 40) % 360;
                 const dynamicColor = `hsl(${waveHue}, 80%, 70%)`;
                 const bgGradient = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, Math.max(canvas.width, canvas.height) * 0.7);
 
@@ -1943,6 +2397,8 @@
                 ctx.fillStyle = bgGradient;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
+            
+            obstacles.forEach(o => o.draw(ctx));
 
             particles.forEach(p => p.draw(ctx));
             items.forEach(item => item.draw(ctx));
@@ -1994,6 +2450,10 @@
                 startGame();
             });
 
+            $('shop-button').addEventListener('click', () => {
+                gameManager.showShopScreen();
+            });
+
             $('tutorial-button').addEventListener('click', () => {
                 showPanel(tutorialMenu);
             });
@@ -2005,9 +2465,21 @@
             $('back-to-main').addEventListener('click', () => {
                 showPanel(mainMenu);
             });
+            
+            $('back-from-missions').addEventListener('click', () => {
+                gameManager.showUpgradeScreen();
+            });
+            
+            $('back-to-main-from-shop').addEventListener('click', () => {
+                showPanel(mainMenu);
+            });
 
             $('back-to-main-from-settings').addEventListener('click', () => {
                 showPanel(mainMenu);
+            });
+            
+            $('show-missions-button').addEventListener('click', () => {
+                gameManager.showMissionsScreen();
             });
 
             $('retry-button').addEventListener('click', () => {
