@@ -20,6 +20,7 @@
             height: 100vh;
             width: 100vw;
             text-align: center;
+            transition: background-color 0.5s;
         }
 
         #game-container {
@@ -72,7 +73,7 @@
             opacity: 1;
             pointer-events: auto;
             transform: translate(-50%, -50%) scale(1);
-            max-width: 600px; /* Wider for shop and missions */
+            max-width: 600px;
         }
 
         .ui-panel h1, .ui-panel h2 {
@@ -265,7 +266,7 @@
         #audio-toggle {
             position: absolute;
             bottom: 20px;
-            left: 20px; /* Moved to the left */
+            left: 20px;
             font-size: 1.5rem;
             cursor: pointer;
             z-index: 100;
@@ -348,7 +349,7 @@
           box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2);
           transition: all 0.2s ease;
           font-weight: bold;
-          display: none; /* Default hidden for desktop */
+          display: none;
         }
         
         #shootBtn:hover {
@@ -359,7 +360,6 @@
             transform: scale(0.95);
         }
         
-        /* Responsive CSS for smaller screens */
         @media (max-width: 600px) {
             #game-container {
                 max-width: 98vw;
@@ -401,9 +401,8 @@
                 left: 20px;
             }
 
-            /* Show shoot button on mobile and position it */
             #shootBtn {
-                display: block; /* Show the button on mobile */
+                display: block;
                 bottom: 20px;
                 right: 20px;
                 transform: translateX(0);
@@ -418,13 +417,13 @@
             color: #fff;
         }
 
-        #missions-menu, #shop-menu {
+        #missions-menu, #shop-menu, #character-menu, #skins-menu {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        #missions-list, #shop-items {
+        #missions-list, #shop-items, #character-options, #skins-options {
             display: grid;
             grid-template-columns: 1fr;
             gap: 15px;
@@ -432,12 +431,36 @@
         }
 
         @media (min-width: 600px) {
-            #missions-list, #shop-items {
+            #missions-list, #shop-items, #character-options, #skins-options {
                 grid-template-columns: 1fr 1fr;
                 gap: 20px;
             }
         }
-
+        
+        #desktop-message-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            color: #fff;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 2000;
+        }
+        
+        .desktop-message h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        .desktop-message p {
+            font-size: 1.2rem;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -498,6 +521,20 @@
             <p>امتیاز فعلی: <span id="shop-score">0</span></p>
             <button class="button" id="back-to-main-from-shop">بازگشت</button>
         </div>
+        
+        <div id="character-menu" class="ui-panel half-visible">
+            <h2>شخصیت‌ها</h2>
+            <p>شخصیت مورد علاقه خود را انتخاب کنید.</p>
+            <div id="character-options"></div>
+            <button class="button" id="back-from-character">بازگشت به فروشگاه</button>
+        </div>
+        
+        <div id="skins-menu" class="ui-panel half-visible">
+            <h2>اسکین‌ها</h2>
+            <p>ظاهر دایره خود را تغییر دهید.</p>
+            <div id="skins-options"></div>
+            <button class="button" id="back-from-skins">بازگشت به فروشگاه</button>
+        </div>
 
         <div id="settings-menu" class="ui-panel">
             <h2>تنظیمات</h2>
@@ -530,7 +567,7 @@
                 </div>
                 <div id="hud-right">
                     <div style="display: flex; align-items: center;">سپر: <div id="shield-bar"><div id="shield-progress"></div></div><span id="shield-time">0</span></div>
-                    <div>کامبو: <span id="combo-count">0</span></div>
+                    <div>گلوله: <span id="ammo-count">0</span></div>
                 </div>
             </div>
         </div>
@@ -551,6 +588,13 @@
     <div id="message-box">
         <p id="message-text"></p>
         <button id="message-close-button">باشه</button>
+    </div>
+    
+    <div id="desktop-message-overlay">
+        <div class="desktop-message">
+            <h1>سازگاری نامناسب</h1>
+            <p>برای انجام این بازی لطفاً آن را روی لپ‌تاپ، مانیتور یا کامپیوتر باز کنید.</p>
+        </div>
     </div>
 
     <script>
@@ -576,6 +620,7 @@
                 projectileSpeed: 400,
                 fireRate: 0.3,
                 damage: 20,
+                maxAmmo: 10,
             },
             enemies: {
                 baseRadius: 16,
@@ -591,6 +636,7 @@
                     crystal: 0.4,
                     slow_mo: 0.05,
                     double_score: 0.05,
+                    ammo: 0.2,
                 },
             },
             waves: {
@@ -617,9 +663,21 @@
                 ]
             },
             shop: [
-                { name: 'افزایش سرعت', price: 200, id: 'speed_up', effect: (player) => player.baseSpeed *= 1.1 },
-                { name: 'سپر بیشتر', price: 150, id: 'shield_up', effect: (player) => player.maxShieldTime += 1 },
-                { name: 'افزایش آسیب', price: 300, id: 'damage_up', effect: (player) => player.damage *= 1.2 },
+                { name: 'افزایش سرعت', price: 200, id: 'speed_up', effect: (player) => player.baseSpeed *= 1.1, type: 'upgrade' },
+                { name: 'سپر بیشتر', price: 150, id: 'shield_up', effect: (player) => player.maxShieldTime += 1, type: 'upgrade' },
+                { name: 'افزایش آسیب', price: 300, id: 'damage_up', effect: (player) => player.damage *= 1.2, type: 'upgrade' },
+                { name: 'بسته گلوله', price: 50, id: 'ammo_pack', effect: (player) => player.ammo += 10, type: 'consumable', description: 'افزودن ۱۰ گلوله' },
+            ],
+            characters: [
+                { id: 'default', name: 'پیش فرض', price: 0, color: '#fff', owned: true },
+                { id: 'red', name: 'قرمز', price: 500, color: '#f00', owned: false },
+                { id: 'green', name: 'سبز', price: 750, color: '#0f0', owned: false },
+                { id: 'blue', name: 'آبی', price: 1000, color: '#00f', owned: false },
+            ],
+            skins: [
+                { id: 'default_skin', name: 'پیش فرض', price: 0, texture: null, owned: true },
+                { id: 'star_skin', name: 'ستاره', price: 300, texture: null, owned: false },
+                { id: 'swirl_skin', name: 'گرداب', price: 600, texture: null, owned: false },
             ],
             missions: [
                 { id: 'kill10chasers', type: 'kill', enemy: 'chaser', count: 10, reward: 100, completed: false, description: 'کشتن ۱۰ دشمن تعقیب‌کننده' },
@@ -627,14 +685,15 @@
                 { id: 'kill50enemies', type: 'kill', enemy: 'any', count: 50, reward: 150, completed: false, description: 'کشتن ۵۰ دشمن' },
             ],
             projectiles: {
-                tripleShotAngle: 15, // degrees
+                tripleShotAngle: 15,
             },
             particles: {
                 playerGlowDensity: 5,
                 itemGlowDensity: 3,
                 maxParticles: 400,
             },
-        audio: { ambienceVolume: 0.5, sfxVolume: 0.7, sfxUrls: { pickup: 'key-176034.mp3', hit: 'Metal Hit.mp3', freeze: 'coldsnap.wav', slow_mo: 'coldsnap.wav', ambience: '544416__zhr__background-music.mp3', player_shoot: 'SHOOT007.mp3', boss_hit: 'sfx_hurt.ogg', boss_explosion: 'Battle in the winter.mp3', boss_spawn: 'theircoming3.ogg', } } };
+            audio: { ambienceVolume: 0.5, sfxVolume: 0.7, sfxUrls: { pickup: 'key-176034.mp3', hit: 'Metal Hit.mp3', freeze: 'coldsnap.wav', slow_mo: 'coldsnap.wav', ambience: '544416__zhr__background-music.mp3', player_shoot: 'SHOOT007.mp3', boss_hit: 'sfx_hurt.ogg', boss_explosion: 'Battle in the winter.mp3', boss_spawn: 'theircoming3.ogg', } }
+        };
 
         // Global variables, consolidated to avoid redeclaration errors
         let screenShakeX = 0;
@@ -648,6 +707,10 @@
         let slowMotionTimer = 0;
         let scoreMultiplier = 1;
         let persistentUpgrades = JSON.parse(localStorage.getItem('persistentUpgrades')) || {};
+        let ownedCharacters = JSON.parse(localStorage.getItem('ownedCharacters')) || ['default'];
+        let ownedSkins = JSON.parse(localStorage.getItem('ownedSkins')) || ['default_skin'];
+        let selectedCharacter = localStorage.getItem('selectedCharacter') || 'default';
+        let selectedSkin = localStorage.getItem('selectedSkin') || 'default_skin';
         let boss = null;
         let playerProjectiles = [];
         let playerLastShotTime = 0;
@@ -662,8 +725,19 @@
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const desktopMessageOverlay = document.getElementById('desktop-message-overlay');
 
         function resizeCanvas() {
+            const isDesktop = window.innerWidth > 600;
+            if (!isDesktop) {
+                document.getElementById('game-container').style.display = 'none';
+                desktopMessageOverlay.style.display = 'flex';
+                return;
+            } else {
+                document.getElementById('game-container').style.display = 'block';
+                desktopMessageOverlay.style.display = 'none';
+            }
+
             const container = document.getElementById('game-container');
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight;
@@ -683,6 +757,8 @@
         const upgradeMenu = document.getElementById('upgrade-menu');
         const missionsMenu = document.getElementById('missions-menu');
         const shopMenu = document.getElementById('shop-menu');
+        const characterMenu = document.getElementById('character-menu');
+        const skinsMenu = document.getElementById('skins-menu');
         const settingsMenu = document.getElementById('settings-menu');
         const hud = document.getElementById('hud');
         const comboDisplay = document.getElementById('combo-display');
@@ -695,7 +771,6 @@
         const bossHealthProgress = document.getElementById('boss-health-progress');
         const waveTimerDisplay = document.getElementById('wave-timer');
         
-        // D-pad button elements for mobile
         const shootBtn = document.getElementById('shootBtn');
 
         let lastTime = 0;
@@ -703,9 +778,8 @@
         let isPaused = false;
         let player, enemies, items, particles, projectiles;
         let audioManager;
-        let obstacles = []; // آرایه برای نگهداری موانع
+        let obstacles = [];
 
-        // Ensure mousePos is initialized properly based on new canvas size
         window.addEventListener('load', () => {
             resizeCanvas();
             mousePos = { x: canvas.width / 2, y: canvas.height / 2 };
@@ -716,7 +790,6 @@
             lastMoveTime: 0,
             init() {
                 window.addEventListener('keydown', (e) => {
-                    // Prevent default behavior for spacebar and other movement keys
                     if (e.code === 'Space' || e.key.toLowerCase() === 'w' || e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 's' || e.key.toLowerCase() === 'd' ||
                         e.key.toLowerCase() === 'arrowup' || e.key.toLowerCase() === 'arrowleft' || e.key.toLowerCase() === 'arrowdown' || e.key.toLowerCase() === 'arrowright') {
                         e.preventDefault();
@@ -793,21 +866,17 @@
                         const dx = mousePos.x - player.x;
                         const dy = mousePos.y - player.y;
                         const dist = Math.hypot(dx, dy);
-                        if (dist > 1) {
-                            vector.x = (dx / dist) * mouseSensitivity;
-                            vector.y = (dy / dist) * mouseSensitivity;
-                            vector.dist = dist;
+                        // Only apply mouse movement if the player is not at the target
+                        if (dist > 10) {
+                            vector.x = dx / dist;
+                            vector.y = dy / dist;
                         }
                     }
                 }
-
                 return vector;
             }
         };
 
-        // =================================================================
-        // Audio Manager
-        // =================================================================
         class AudioManager {
             constructor() {
                 this.isInitialized = false;
@@ -896,9 +965,6 @@
             }
         }
 
-        // =================================================================
-        // Game Objects (Player, Enemy, Item, Particle)
-        // =================================================================
         class PlayerProjectile {
             constructor(x, y, direction, damage) {
                 this.x = x;
@@ -989,14 +1055,12 @@
                 } else {
                     this.x += this.direction.x * this.speed * dt;
                     this.y += this.direction.y * this.speed * dt;
-                    // check collision with enemies to trigger explosion
                     for (const enemy of enemies) {
                         const dx = this.x - enemy.x;
                         const dy = this.y - enemy.y;
                         const dist = Math.hypot(dx, dy);
                         if (dist < this.radius + enemy.radius) {
                             this.isExploded = true;
-                            // Trigger explosion on hit
                             break;
                         }
                     }
@@ -1036,23 +1100,25 @@
                 this.maxShieldTime = config.player.shieldTime;
                 this.isShooting = false;
                 this.shootCooldown = 0;
-                this.projectileType = 'basic'; // 'basic', 'triple', 'laser', 'bomb'
+                this.projectileType = 'basic';
                 this.damage = config.player.damage;
+                this.ammo = config.player.maxAmmo;
+                
+                const char = config.characters.find(c => c.id === selectedCharacter);
+                this.color = char ? char.color : config.player.glowColor;
 
-                // Apply persistent upgrades
-                this.speed = config.player.baseSpeed * (persistentUpgrades.speed || 1);
-                this.maxShieldTime = config.player.shieldTime * (persistentUpgrades.shield || 1);
-                this.damage = config.player.damage * (persistentUpgrades.damage || 1);
+                this.speed = config.player.baseSpeed * (persistentUpgrades.speed_up || 1);
+                this.maxShieldTime = config.player.shieldTime * (persistentUpgrades.shield_up || 1);
+                this.damage = config.player.damage * (persistentUpgrades.damage_up || 1);
                 this.shieldTime = this.maxShieldTime;
             }
             
-            // Function to upgrade projectile type
             setProjectileType(type) {
                 this.projectileType = type;
             }
 
             shoot() {
-                if (this.shootCooldown <= 0) {
+                if (this.shootCooldown <= 0 && this.ammo > 0) {
                     const dx = mousePos.x - this.x;
                     const dy = mousePos.y - this.y;
                     const dist = Math.hypot(dx, dy);
@@ -1060,6 +1126,7 @@
                     
                     if (this.projectileType === 'basic') {
                         playerProjectiles.push(new PlayerProjectile(this.x, this.y, direction, this.damage));
+                        this.ammo--;
                         this.shootCooldown = 1 / config.player.fireRate;
                     } else if (this.projectileType === 'triple') {
                         const baseAngle = Math.atan2(direction.y, direction.x);
@@ -1070,12 +1137,15 @@
                         playerProjectiles.push(new TripleShotProjectile(this.x, this.y, {x: Math.cos(angle1), y: Math.sin(angle1)}, this.damage));
                         playerProjectiles.push(new TripleShotProjectile(this.x, this.y, {x: Math.cos(angle2), y: Math.sin(angle2)}, this.damage));
                         playerProjectiles.push(new TripleShotProjectile(this.x, this.y, {x: Math.cos(angle3), y: Math.sin(angle3)}, this.damage));
-                        this.shootCooldown = 1 / (config.player.fireRate * 0.7); // Slower fire rate for triple shot
+                        this.ammo--;
+                        this.shootCooldown = 1 / (config.player.fireRate * 0.7);
                     } else if (this.projectileType === 'laser') {
                         playerProjectiles.push(new LaserProjectile(this.x, this.y, direction, this.damage));
+                        this.ammo--;
                         this.shootCooldown = 1 / (config.player.fireRate * 0.5);
                     } else if (this.projectileType === 'bomb') {
                         playerProjectiles.push(new BombProjectile(this.x, this.y, direction, this.damage * 2));
+                        this.ammo--;
                         this.shootCooldown = 1 / (config.player.fireRate * 0.3);
                     }
                     
@@ -1085,12 +1155,12 @@
 
             update(dt, inputVector) {
                 this.shootCooldown -= dt;
-                if (this.isShooting && this.shootCooldown <= 0) {
+                if (this.isShooting && this.shootCooldown <= 0 && this.ammo > 0) {
                     this.shoot();
                 }
-
-                this.targetSpeed = this.speed;
                 
+                this.targetSpeed = this.speed;
+
                 const previousShieldState = this.isShieldActive;
                 this.isShieldActive = this.shieldTime > 0;
                 if (this.isShieldActive) {
@@ -1117,17 +1187,9 @@
                 const progress = this.maxShieldTime > 0 ? (this.shieldTime / this.maxShieldTime) * 100 : 0;
                 shieldProgressBar.style.width = `${progress}%`;
 
-                if ((!inputVector) || (inputVector.x === 0 && inputVector.y === 0)) {
-                    this.targetSpeed = 0;
-                } else {
-                    if (inputVector.dist !== undefined) {
-                        const maxMove = Math.min(this.speed * dt, inputVector.dist);
-                        this.x += inputVector.x * maxMove;
-                        this.y += inputVector.y * maxMove;
-                    } else {
-                        this.x += inputVector.x * this.speed * dt;
-                        this.y += inputVector.y * this.speed * dt;
-                    }
+                if (inputVector && (inputVector.x !== 0 || inputVector.y !== 0)) {
+                    this.x += inputVector.x * this.speed * dt;
+                    this.y += inputVector.y * this.speed * dt;
                 }
 
                 this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
@@ -1142,7 +1204,7 @@
                             this.x + Math.cos(angle) * r,
                             this.y + Math.sin(angle) * r,
                             { x: Math.cos(angle), y: Math.sin(angle) },
-                            '#fff',
+                            this.color,
                             Math.random() * 2 + 1,
                             0.5
                         ));
@@ -1151,18 +1213,16 @@
             }
 
             draw(ctx) {
-                // Drawing the player's core
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = config.player.glowColor;
+                ctx.fillStyle = this.color;
                 ctx.fill();
 
-                // Drawing the player's glow
                 const gradient = ctx.createRadialGradient(this.x, this.y, this.radius, this.x, this.y, this.radius * 2);
-                gradient.addColorStop(0, `rgba(255, 255, 255, ${this.shieldTime > 0 ? 0.3 : 0.2})`);
+                gradient.addColorStop(0, `rgba(${hexToRgb(this.color).r}, ${hexToRgb(this.color).g}, ${hexToRgb(this.color).b}, ${this.shieldTime > 0 ? 0.3 : 0.2})`);
                 gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
                 ctx.fillStyle = gradient;
-                ctx.beginPath(); // Corrected: Added beginPath before the second arc
+                ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius * 2, 0, Math.PI * 2);
                 ctx.fill();
 
@@ -1221,7 +1281,7 @@
                 this.isBoss = (type === 'boss');
                 this.health = 1;
                 this.maxHealth = 1;
-                this.damageReduction = 0; // for armored enemies
+                this.damageReduction = 0;
 
                 switch (type) {
                     case 'armored':
@@ -1337,13 +1397,11 @@
                     case 'teleporter':
                         this.teleportTimer -= dt;
                         if (this.teleportTimer <= 0) {
-                            // Particle effect before teleport
                             for(let i=0; i<20; i++) {
                                 particles.push(getParticle(this.x, this.y, {x: Math.random()*2-1, y: Math.random()*2-1}, '#8a2be2', Math.random()*3+1, 0.5));
                             }
                             this.x = Math.random() * canvas.width;
                             this.y = Math.random() * canvas.height;
-                            // Particle effect after teleport
                             for(let i=0; i<20; i++) {
                                 particles.push(getParticle(this.x, this.y, {x: Math.random()*2-1, y: Math.random()*2-1}, '#8a2be2', Math.random()*3+1, 0.5));
                             }
@@ -1388,7 +1446,7 @@
                 const dy = player.y - this.y;
                 const dist = Math.hypot(dx, dy);
 
-                if (this.health > this.maxHealth * 0.66) { // Phase 1
+                if (this.health > this.maxHealth * 0.66) {
                     this.speed = 80;
                     this.radius = 40;
                     if (this.shooterTimer <= 0) {
@@ -1401,7 +1459,7 @@
                         this.x += (dx/dist) * this.speed * dt;
                         this.y += (dy/dist) * this.speed * dt;
                     }
-                } else if (this.health > this.maxHealth * 0.33) { // Phase 2
+                } else if (this.health > this.maxHealth * 0.33) {
                     this.speed = 100;
                     this.radius = 50;
                     if (this.shooterTimer <= 0) {
@@ -1416,7 +1474,7 @@
                     }
                     this.x += (dx/dist) * this.speed * dt;
                     this.y += (dy/dist) * this.speed * dt;
-                } else { // Phase 3
+                } else {
                     this.speed = 150;
                     this.radius = 60;
                     if (this.shooterTimer <= 0) {
@@ -1481,6 +1539,7 @@
                     case 'crystal': return '#ffdd00';
                     case 'slow_mo': return '#8a2be2';
                     case 'double_score': return '#ff69b4';
+                    case 'ammo': return '#ff0077';
                     default: return '#fff';
                 }
             }
@@ -1586,7 +1645,6 @@
                     this.x += this.direction.x * 50 * dt;
                     this.y += this.direction.y * 50 * dt;
 
-                    // Bounce off walls
                     if (this.x < 0 || this.x + this.width > canvas.width) {
                         this.direction.x *= -1;
                     }
@@ -1601,10 +1659,6 @@
                 ctx.fillRect(this.x, this.y, this.width, this.height);
             }
         }
-
-        // =================================================================
-        // Game Manager
-        // =================================================================
 
         const gameManager = {
             score: 0,
@@ -1625,10 +1679,8 @@
                 currentWaveDuration = 0;
                 obstacles = [];
                 
-                // reset missions on new game
                 missions = config.missions.map(m => ({ ...m, completed: false }));
                 localStorage.setItem('missions', JSON.stringify(missions));
-
 
                 player = new Player(canvas.width / 2, canvas.height / 2);
                 this.updateHUD();
@@ -1638,6 +1690,7 @@
                 const waveElement = document.getElementById('wave');
                 const shieldElement = document.getElementById('shield-time');
                 const comboElement = document.getElementById('combo-count');
+                const ammoElement = document.getElementById('ammo-count');
 
                 if (scoreElement) scoreElement.textContent = Math.round(this.score);
                 if (waveElement) waveElement.textContent = this.wave;
@@ -1647,6 +1700,14 @@
                     shieldProgressBar.style.width = `${progress}%`;
                 }
                 if (player && comboElement) comboElement.textContent = player.combo;
+                if (player && ammoElement) ammoElement.textContent = player.ammo;
+                if (player && player.ammo <= 0) {
+                    document.getElementById('shootBtn').style.opacity = 0.5;
+                    document.getElementById('shootBtn').style.cursor = 'not-allowed';
+                } else {
+                    document.getElementById('shootBtn').style.opacity = 1;
+                    document.getElementById('shootBtn').style.cursor = 'pointer';
+                }
 
                 if (boss) {
                     bossHealthBar.style.opacity = 1;
@@ -1721,17 +1782,14 @@
                     const y = Math.random() * canvas.height;
                     const rand = Math.random();
                     let itemType;
-                    const raritySum = config.items.rarity.shield + config.items.rarity.freeze + config.items.rarity.crystal + config.items.rarity.slow_mo + config.items.rarity.double_score;
-                    if (rand < config.items.rarity.shield) {
-                        itemType = 'shield';
-                    } else if (rand < config.items.rarity.shield + config.items.rarity.freeze) {
-                        itemType = 'freeze';
-                    } else if (rand < config.items.rarity.shield + config.items.rarity.freeze + config.items.rarity.crystal) {
-                        itemType = 'crystal';
-                    } else if (rand < raritySum - config.items.rarity.double_score) {
-                        itemType = 'slow_mo';
-                    } else {
-                        itemType = 'double_score';
+                    const raritySum = Object.values(config.items.rarity).reduce((a, b) => a + b, 0);
+                    let cumulativeRarity = 0;
+                    for (const key in config.items.rarity) {
+                        cumulativeRarity += config.items.rarity[key];
+                        if (rand < cumulativeRarity) {
+                            itemType = key;
+                            break;
+                        }
                     }
                     items.push(new Item(x, y, itemType));
                 }
@@ -1743,7 +1801,6 @@
                 const upgradeOptionsDiv = document.getElementById('upgrade-options');
                 upgradeOptionsDiv.innerHTML = '';
                 
-                // Add an option to upgrade projectile type
                 const projectileUpgradeOption = {
                     name: 'شلیک سه‌تایی',
                     description: 'شلیک سه تیر به جای یک تیر با زاویه ±۱۵ درجه',
@@ -1780,31 +1837,124 @@
                 const shopScore = document.getElementById('shop-score');
                 shopScore.textContent = Math.round(this.score);
 
-                shopItems.forEach(item => {
+                config.shop.forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'shop-item';
-                    card.innerHTML = `<h3>${item.name}</h3><p>${item.description}</p><span class="price">${item.price}</span>`;
                     
                     const isPurchased = persistentUpgrades[item.id];
-                    if (isPurchased) {
-                        card.classList.add('purchased');
-                        card.innerHTML = `<h3>${item.name}</h3><p>${item.description}</p><span class="price">خریداری شد</span>`;
-                        card.style.cursor = 'not-allowed';
-                    } else {
-                        card.addEventListener('click', () => {
-                            if (this.score >= item.price) {
-                                this.score -= item.price;
-                                item.effect(player);
+                    let buttonText = 'خرید';
+                    
+                    if (item.type === 'upgrade') {
+                         card.innerHTML = `<h3>${item.name}</h3><p>ارتقاء دائمی</p><span class="price">${item.price}</span>`;
+                         if (isPurchased) {
+                             buttonText = 'خریداری شد';
+                             card.classList.add('purchased');
+                             card.style.cursor = 'not-allowed';
+                         }
+                    } else if (item.type === 'consumable') {
+                         card.innerHTML = `<h3>${item.name}</h3><p>${item.description}</p><span class="price">${item.price}</span>`;
+                    }
+                    
+                    card.addEventListener('click', () => {
+                        if (item.type === 'upgrade' && isPurchased) return;
+
+                        if (this.score >= item.price) {
+                            this.score -= item.price;
+                            item.effect(player);
+                            if (item.type === 'upgrade') {
                                 persistentUpgrades[item.id] = true;
                                 localStorage.setItem('persistentUpgrades', JSON.stringify(persistentUpgrades));
-                                this.showShopScreen(); // Reload shop to show item as purchased
+                            }
+                            this.showShopScreen();
+                        } else {
+                            showMessage('امتیاز کافی برای خرید این آیتم ندارید.');
+                        }
+                    });
+                    
+                    shopItemsDiv.appendChild(card);
+                });
+            },
+            showCharacterMenu() {
+                isPaused = true;
+                hideAllPanels();
+                characterMenu.classList.add('half-visible');
+                const characterOptionsDiv = document.getElementById('character-options');
+                characterOptionsDiv.innerHTML = '';
+                
+                config.characters.forEach(char => {
+                    const card = document.createElement('div');
+                    card.className = 'shop-item';
+                    card.innerHTML = `<h3>${char.name}</h3><p>شخصیت جدید</p><span class="price">${char.price}</span>`;
+                    
+                    const isOwned = ownedCharacters.includes(char.id);
+                    if (isOwned) {
+                        card.classList.add('owned');
+                        if (selectedCharacter === char.id) {
+                            card.innerHTML = `<h3>${char.name}</h3><p>شخصیت فعلی</p><span class="status">فعال</span>`;
+                            card.style.cursor = 'not-allowed';
+                        } else {
+                            card.innerHTML = `<h3>${char.name}</h3><p>شخصیت جدید</p><span class="status">انتخاب</span>`;
+                            card.addEventListener('click', () => {
+                                selectedCharacter = char.id;
+                                localStorage.setItem('selectedCharacter', selectedCharacter);
+                                player.color = char.color;
+                                this.showCharacterMenu();
+                            });
+                        }
+                    } else {
+                        card.addEventListener('click', () => {
+                            if (this.score >= char.price) {
+                                this.score -= char.price;
+                                ownedCharacters.push(char.id);
+                                localStorage.setItem('ownedCharacters', JSON.stringify(ownedCharacters));
+                                this.showCharacterMenu();
                             } else {
-                                showMessage('امتیاز کافی برای خرید این آیتم ندارید.');
+                                showMessage('امتیاز کافی برای خرید این شخصیت ندارید.');
                             }
                         });
                     }
+                    characterOptionsDiv.appendChild(card);
+                });
+            },
+            showSkinsMenu() {
+                isPaused = true;
+                hideAllPanels();
+                skinsMenu.classList.add('half-visible');
+                const skinsOptionsDiv = document.getElementById('skins-options');
+                skinsOptionsDiv.innerHTML = '';
+                
+                config.skins.forEach(skin => {
+                    const card = document.createElement('div');
+                    card.className = 'shop-item';
+                    card.innerHTML = `<h3>${skin.name}</h3><p>اسکین جدید</p><span class="price">${skin.price}</span>`;
                     
-                    shopItemsDiv.appendChild(card);
+                    const isOwned = ownedSkins.includes(skin.id);
+                    if (isOwned) {
+                        card.classList.add('owned');
+                        if (selectedSkin === skin.id) {
+                            card.innerHTML = `<h3>${skin.name}</h3><p>اسکین فعلی</p><span class="status">فعال</span>`;
+                            card.style.cursor = 'not-allowed';
+                        } else {
+                            card.innerHTML = `<h3>${skin.name}</h3><p>اسکین جدید</p><span class="status">انتخاب</span>`;
+                            card.addEventListener('click', () => {
+                                selectedSkin = skin.id;
+                                localStorage.setItem('selectedSkin', selectedSkin);
+                                this.showSkinsMenu();
+                            });
+                        }
+                    } else {
+                        card.addEventListener('click', () => {
+                            if (this.score >= skin.price) {
+                                this.score -= skin.price;
+                                ownedSkins.push(skin.id);
+                                localStorage.setItem('ownedSkins', JSON.stringify(ownedSkins));
+                                this.showSkinsMenu();
+                            } else {
+                                showMessage('امتیاز کافی برای خرید این اسکین ندارید.');
+                            }
+                        });
+                    }
+                    skinsOptionsDiv.appendChild(card);
                 });
             },
             showMissionsScreen() {
@@ -1826,15 +1976,12 @@
             },
         };
 
-        // =================================================================
-        // Main Game Loop and Logic
-        // =================================================================
         function startScreenShake() {
             screenShakeTime = SCREEN_SHAKE_DURATION;
         }
 
         function hideAllPanels() {
-            [mainMenu, tutorialMenu, gameOverMenu, upgradeMenu, settingsMenu, shopMenu, missionsMenu].forEach(panel => panel.classList.remove('visible', 'half-visible'));
+            [mainMenu, tutorialMenu, gameOverMenu, upgradeMenu, settingsMenu, shopMenu, missionsMenu, characterMenu, skinsMenu].forEach(panel => panel.classList.remove('visible', 'half-visible'));
         }
 
         function showPanel(panel) {
@@ -2012,7 +2159,6 @@
             }
         }
 
-        // Helper functions for TTS
         function base64ToArrayBuffer(base64) {
             const binaryString = window.atob(base64);
             const len = binaryString.length;
@@ -2072,7 +2218,6 @@
         function handleCollisions() {
             if (!player) return;
 
-            // Player vs Enemies
             for (let i = enemies.length - 1; i >= 0; i--) {
                 const enemy = enemies[i];
                 const dx = player.x - enemy.x;
@@ -2110,7 +2255,6 @@
                 }
             }
 
-            // Player vs Enemy Projectiles
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 const projectile = projectiles[i];
                 const dx = player.x - projectile.x;
@@ -2130,7 +2274,6 @@
                 }
             }
             
-            // Player vs Obstacles
             for (const obstacle of obstacles) {
                 const dx = player.x - Math.max(obstacle.x, Math.min(player.x, obstacle.x + obstacle.width));
                 const dy = player.y - Math.max(obstacle.y, Math.min(player.y, obstacle.y + obstacle.height));
@@ -2140,7 +2283,6 @@
                 }
             }
 
-            // Player Projectiles vs Enemies
             for (let i = playerProjectiles.length - 1; i >= 0; i--) {
                 const p = playerProjectiles[i];
                 for (let j = enemies.length - 1; j >= 0; j--) {
@@ -2150,7 +2292,6 @@
                     const dist = Math.hypot(dx, dy);
 
                     if (dist < p.radius + e.radius) {
-                        // Handle collision based on projectile type
                         if (p instanceof BombProjectile && p.isExploded) {
                             const explDist = Math.hypot(p.x - e.x, p.y - e.y);
                             if (explDist < p.explosionRadius) {
@@ -2170,7 +2311,7 @@
                             if (e.isBoss) {
                                 gameManager.score += 1000;
                                 startScreenShake();
-                                if (audioManager) audioManager.playSfx('boss_explosion'); // Guarded audio call
+                                if (audioManager) audioManager.playSfx('boss_explosion');
                                 boss = null;
                                 enemies.splice(j, 1);
                                 for (let k=0; k<5; k++) {
@@ -2190,7 +2331,6 @@
                 }
             }
 
-            // Player-Item collisions
             for (let i = items.length - 1; i >= 0; i--) {
                 const item = items[i];
                 const dx = player.x - item.x;
@@ -2208,7 +2348,7 @@
                                 e.isFrozen = true;
                                 setTimeout(() => e.isFrozen = false, 2000);
                             });
-                            if (audioManager) audioManager.playSfx('freeze'); // Guarded audio call
+                            if (audioManager) audioManager.playSfx('freeze');
                             break;
                         case 'crystal':
                             gameManager.score += 25;
@@ -2216,15 +2356,18 @@
                         case 'slow_mo':
                             isSlowMotion = true;
                             slowMotionTimer = 4;
-                            if (audioManager) audioManager.playSfx('slow_mo'); // Guarded audio call
+                            if (audioManager) audioManager.playSfx('slow_mo');
                             break;
                         case 'double_score':
                             scoreMultiplier = 2;
                             setTimeout(() => scoreMultiplier = 1, 8000);
                             break;
+                        case 'ammo':
+                            player.ammo = Math.min(player.ammo + 5, config.player.maxAmmo);
+                            break;
                     }
                     items.splice(i, 1);
-                    if (audioManager) audioManager.playSfx('pickup'); // Guarded audio call
+                    if (audioManager) audioManager.playSfx('pickup');
                 }
             }
         }
@@ -2233,7 +2376,6 @@
             if (gameManager.isWaveActive && !boss) {
                 enemySpawnTimer -= dt;
                 if (enemySpawnTimer <= 0) {
-                    // افزایش تنوع و تعداد دشمنان با پیشرفت موج
                     const enemyTypes = ['chaser', 'wanderer', 'shifter', 'bomber', 'shooter', 'splinterer', 'teleporter', 'armored', 'pattern_shooter'];
                     const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
                     
@@ -2247,13 +2389,11 @@
                     }
                     enemies.push(new Enemy(x, y, type));
                     
-                    // نرخ اسپاون را بر اساس موج فعلی تنظیم کنید
                     const spawnRate = config.enemies.spawnRatePerWave / (1 + gameManager.wave * 0.1);
                     enemySpawnTimer = spawnRate;
                 }
             }
         }
-
 
         function endGame() {
             gameActive = false;
@@ -2507,7 +2647,6 @@
                 isPaused = false;
             });
             
-            // Event listener for the new shoot button
             if (shootBtn) {
                 shootBtn.addEventListener('click', () => {
                     if (gameActive && player) {
