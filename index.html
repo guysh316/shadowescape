@@ -18,10 +18,31 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            width: 100vw;
+            height: 100vh; /* Full viewport height */
+            width: 100vw; /* Full viewport width */
             text-align: center;
             transition: background-color 0.5s;
+        }
+
+        /* Game Container */
+        #game-container {
+            position: relative;
+            box-shadow: 0 0 50px rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            background-color: #0a0a0a;
+            width: 100%; /* Full width of container */
+            height: 100%; /* Full height of container */
+            max-width: none; /* Removed max-width restriction */
+            max-height: none; /* Removed max-height restriction */
+        }
+
+        canvas {
+            display: block;
+            background-color: #1a1a1a;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
         }
 
         /* Mobile Device Restriction Overlay */
@@ -33,7 +54,7 @@
             height: 100%;
             background-color: #000;
             z-index: 2000;
-            display: flex;
+            display: none; /* Hidden by default */
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -41,7 +62,7 @@
             box-sizing: border-box;
             text-align: center;
         }
-        
+
         #mobile-restriction h1 {
             font-size: 2rem;
             color: #ffcc00;
@@ -52,28 +73,6 @@
             font-size: 1.2rem;
             color: #aaa;
             max-width: 400px;
-        }
-
-        /* Game Container */
-        #game-container {
-            position: relative;
-            box-shadow: 0 0 50px rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            overflow: hidden;
-            background-color: #0a0a0a;
-            width: 100%;
-            height: 100%;
-            max-width: 90vw;
-            max-height: 90vh;
-            aspect-ratio: 4/3;
-        }
-
-        canvas {
-            display: block;
-            background-color: #1a1a1a;
-            width: 100%;
-            height: 100%;
-            touch-action: none;
         }
 
         /* UI Panels */
@@ -338,7 +337,7 @@
             text-shadow: 0 0 5px #fff;
         }
 
-        /* Custom message box outside the game */
+        /* Custom message box outside the game frame */
         #message-box {
             position: absolute;
             top: 20px;
@@ -361,8 +360,6 @@
             opacity: 1;
             visibility: visible;
         }
-
-        /* Loading Overlay - REMOVED */
         
         #shootBtn {
           position: absolute;
@@ -389,75 +386,14 @@
         #shootBtn:active {
             transform: scale(0.95);
         }
-        
-        /* Responsive styles for mobile */
+
+        /* Media query to hide the game on small screens and show a message */
         @media (max-width: 600px) {
-            #game-container {
-                max-width: 98vw;
-                max-height: 98vh;
-            }
-            .ui-panel {
-                width: 90%;
-                max-width: 300px;
-            }
-            .ui-panel h1, .ui-panel h2 {
-                font-size: 1.8rem;
-            }
-            .ui-panel p {
-                font-size: 1rem;
-            }
-            .button {
-                font-size: 1rem;
-                padding: 12px;
-                margin: 10px 0;
-            }
-            #hud {
-                top: 10px;
-                left: 10px;
-                right: 10px;
-                font-size: 0.8rem;
-            }
-            #hud > div {
-                padding: 6px 10px;
-            }
-            #shield-bar {
-                width: 70px;
-            }
-            #combo-display {
-                font-size: 2rem;
-            }
-            
-            #audio-toggle {
-                bottom: 20px;
-                left: 20px;
-            }
-
-            #shootBtn {
-                display: block;
-                bottom: 20px;
-                right: 20px;
-                transform: translateX(0);
-                font-size: 1rem;
-                padding: 10px 15px;
-            }
-
-            /* Hide game container on mobile */
-            #game-container {
+            #game-container, #shootBtn, #hud-container, #audio-toggle, #message-box {
                 display: none;
             }
-            
             #mobile-restriction {
                 display: flex;
-            }
-        }
-
-        /* Desktop specific styles */
-        @media (min-width: 601px) {
-            #mobile-restriction {
-                display: none;
-            }
-            #game-container {
-                display: block;
             }
         }
         
@@ -678,6 +614,7 @@
                 baseSpeed: 120,
                 spawnDistance: 300,
                 spawnRatePerWave: 1.8,
+                maxCount: 12 // Added maximum enemy count
             },
             items: {
                 spawnRate: 0.002,
@@ -824,6 +761,7 @@
         function resizeCanvas() {
             const container = document.getElementById('game-container');
             if (container) {
+                // Set canvas size to match the container, making it responsive
                 canvas.width = container.clientWidth;
                 canvas.height = container.clientHeight;
                 config.canvas.width = canvas.width;
@@ -850,7 +788,6 @@
         const audioToggle = document.getElementById('audio-toggle');
         const messageBox = document.getElementById('message-box');
         const messageText = document.getElementById('message-text');
-        // Loading overlay and spinner removed completely
         const shieldProgressBar = document.getElementById('shield-progress');
         const bossHealthBar = document.getElementById('boss-health-bar');
         const bossHealthProgress = document.getElementById('boss-health-progress');
@@ -859,6 +796,7 @@
         const tokenCountElement = document.getElementById('token-count');
         const countdownOverlay = document.getElementById('countdown-overlay');
         const countdownText = document.getElementById('countdown-text');
+        const mobileRestriction = document.getElementById('mobile-restriction');
         
         const shootBtn = document.getElementById('shootBtn');
 
@@ -871,9 +809,26 @@
         let obstacles = [];
 
         window.addEventListener('load', () => {
+            // Initial canvas resize on load
             resizeCanvas();
             mousePos = { x: canvas.width / 2, y: canvas.height / 2 };
+            // Check screen width and show/hide game accordingly
+            checkScreenSize();
         });
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            checkScreenSize();
+        });
+
+        function checkScreenSize() {
+            if (window.innerWidth <= 600) {
+                if (mobileRestriction) mobileRestriction.style.display = 'flex';
+                if (mainContainer) mainContainer.style.display = 'none';
+            } else {
+                if (mobileRestriction) mobileRestriction.style.display = 'none';
+                if (mainContainer) mainContainer.style.display = 'block';
+            }
+        }
 
         // =================================================================
         // Classes
@@ -1867,6 +1822,7 @@
                 boss.radius = 40;
                 enemies.push(boss);
                 if (audioManager) audioManager.playSfx('boss_spawn');
+                showMessage(`موج ${this.wave} - باس فایت!`);
             },
             spawnEnemiesForWave(wave) {
                 let enemyTypesToSpawn = [];
@@ -1891,8 +1847,11 @@
                     enemyTypesToSpawn = ['chaser', 'wanderer', 'shifter', 'bomber', 'shooter', 'splinterer', 'teleporter', 'armored', 'pattern_shooter'];
                     enemyCount = 10 + Math.floor(wave / 2);
                 }
+                
+                // Capped the number of enemies spawned per wave
+                const newEnemiesToSpawn = Math.min(enemyCount, config.enemies.maxCount - enemies.length);
 
-                for (let i = 0; i < enemyCount; i++) {
+                for (let i = 0; i < newEnemiesToSpawn; i++) {
                     const side = Math.floor(Math.random() * 4);
                     let x, y;
                     switch (side) {
@@ -2313,7 +2272,8 @@
         }
         
         function spawnContinuousEnemies(dt) {
-            if (gameManager.isWaveActive && !boss) {
+            // Check if current enemy count is below the max limit
+            if (gameManager.isWaveActive && !boss && enemies.length < config.enemies.maxCount) {
                 // Adjust spawn interval for increasing difficulty
                 const spawnInterval = Math.max(0.5, 2 - gameManager.wave * 0.1);
                 enemySpawnTimer -= dt;
@@ -2406,11 +2366,8 @@
         }
 
         function gameLoop(timestamp) {
-            if (gameActive) {
-                document.body.style.cursor = 'none';
-            } else {
-                document.body.style.cursor = 'default';
-            }
+            // Only show cursor if the game is not active
+            document.body.style.cursor = gameActive ? 'none' : 'default';
 
             if (!gameActive) {
                 lastTime = timestamp;
@@ -2635,10 +2592,6 @@
             on('back-to-main-from-gameover', 'click', () => {
                 showPanel(mainMenu);
             });
-            
-            // Removed magical-upgrade-button functionality and event listener
-            
-            // Removed read-tutorial-button functionality and event listener
 
             if (audioToggle) {
                 audioToggle.addEventListener('click', () => {
@@ -2646,8 +2599,6 @@
                 });
             }
 
-            // No event listener needed for message-box as it auto-hides now.
-            
             if (shootBtn) {
                 shootBtn.addEventListener('click', () => {
                     if (gameActive && player && player.ammo > 0) {
@@ -2657,6 +2608,9 @@
                     }
                 });
             }
+            
+            // Initial call to check screen size
+            checkScreenSize();
 
             requestAnimationFrame(gameLoop);
         });
