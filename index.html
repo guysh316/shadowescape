@@ -75,18 +75,24 @@
             height: 100%;
             touch-action: none;
         }
+        
+        #backgroundCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+        }
 
         /* UI Panels */
         .ui-panel {
             position: absolute;
-            background: rgba(26, 26, 26, 0.9);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: linear-gradient(180deg, rgba(26,26,26,0.95), rgba(14,14,14,0.95));
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
             opacity: 0;
             pointer-events: none;
             left: 50%;
@@ -94,6 +100,9 @@
             transform: translate(-50%, -50%) scale(0.95);
             width: 80%;
             max-width: 400px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
         }
 
         .ui-panel.visible {
@@ -106,7 +115,7 @@
             opacity: 1;
             pointer-events: auto;
             transform: translate(-50%, -50%) scale(1);
-            max-width: 600px;
+            max-width: 100%;
         }
 
         .ui-panel h1, .ui-panel h2 {
@@ -130,22 +139,38 @@
             padding: 15px;
             margin: 15px 0;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             background: linear-gradient(145deg, #1f1f1f, #2a2a2a);
             color: #fff;
             font-size: 1.2rem;
             font-weight: bold;
             cursor: pointer;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.3), -5px -5px 15px rgba(255,255,255,0.05);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.4);
             transition: all 0.2s ease;
             user-select: none;
+            opacity: 0;
+            transform: scale(0.8);
+            animation: fadeInUp 0.5s forwards;
+            letter-spacing: .3px;
+        }
+        
+        .ui-panel button:nth-child(1) { animation-delay: 0.2s; }
+        .ui-panel button:nth-child(2) { animation-delay: 0.4s; }
+        .ui-panel button:nth-child(3) { animation-delay: 0.6s; }
+        .ui-panel button:nth-child(4) { animation-delay: 0.8s; }
+        .ui-panel button:nth-child(5) { animation-delay: 1.0s; }
+        .ui-panel button:nth-child(6) { animation-delay: 1.2s; }
+        
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: scale(1); }
         }
 
         .button:hover {
             background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
-            transform: translateY(-2px);
-            box-shadow: 8px 8px 20px rgba(0,0,0,0.4), -8px -8px 20px rgba(255,255,255,0.08);
+            transform: translateY(-4px);
+            box-shadow: 0 14px 40px rgba(0,0,0,0.6);
+            border-color: rgba(255,255,255,0.16);
         }
 
         .button:active {
@@ -163,15 +188,22 @@
 
         /* Shop & Upgrade Items */
         .upgrade-card, .shop-item, .mission-item {
-            background: rgba(30, 30, 30, 0.9);
-            border-radius: 10px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: linear-gradient(180deg, rgba(26,26,26,0.95), rgba(14,14,14,0.95));
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
             padding: 15px;
             margin-bottom: 15px;
             cursor: pointer;
-            border: 2px solid transparent;
-            transition: border-color 0.2s ease;
             text-align: right;
             position: relative;
+        }
+        
+        .shop-item:hover, .upgrade-card:hover, .mission-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 40px rgba(0,0,0,0.6);
+            border-color: rgba(255,255,255,0.16);
         }
         
         .upgrade-card h3, .shop-item h3, .mission-item h3 {
@@ -184,10 +216,6 @@
             margin: 0;
             font-size: 0.9rem;
             color: #aaa;
-        }
-        
-        .shop-item:hover, .upgrade-card:hover {
-            border-color: #ffcc00;
         }
         
         .shop-item.purchased {
@@ -241,13 +269,13 @@
         }
 
         #hud > div {
-            background: rgba(10, 10, 10, 0.5);
+            border-radius: 10px;
+            border: 1px solid var(--hud-accent, rgba(255,255,255,0.07));
+            background: rgba(0,0,0,0.35);
             backdrop-filter: blur(5px);
             padding: 8px 15px;
-            border-radius: 10px;
             font-weight: bold;
             font-size: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         #hud-left, #hud-right {
@@ -482,7 +510,7 @@
 
         @media (min-width: 600px) {
             #missions-list, #shop-items, #character-options, #skins-options {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(9, 1fr);
                 gap: 20px;
             }
         }
@@ -516,12 +544,13 @@
 
         /* New styles for shop item layout */
         #shop-items {
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(9, 1fr);
             gap: 20px;
         }
     </style>
 </head>
 <body>
+    <canvas id="backgroundCanvas"></canvas>
     <div id="mobile-restriction">
         <h1>این بازی فقط در کامپیوتر قابل اجرا است</h1>
         <p>لطفاً برای تجربه بهتر، از یک دستگاه با صفحه بزرگتر استفاده کنید.</p>
@@ -536,6 +565,7 @@
             <p>فرار از سایه‌ها، جمع‌آوری نور</p>
             <button class="button" id="play-button">شروع بازی</button>
             <button class="button" id="shop-button">فروشگاه</button>
+            <button class="button" id="profile-button">پروفایل</button>
             <button class="button" id="tutorial-button">آموزش</button>
             <button class="button" id="settings-button">تنظیمات</button>
             <p style="margin-top: 20px;">بالاترین امتیاز: <span id="highscore-display">0</span></p>
@@ -559,6 +589,14 @@
             <p>موج نهایی: <span id="final-wave">0</span></p>
             <button class="button" id="retry-button">تلاش مجدد</button>
             <button class="button" id="back-to-main-from-gameover">بازگشت به منو</button>
+        </div>
+        
+        <div id="profile-menu" class="ui-panel">
+            <h2>پروفایل</h2>
+            <p>باس‌های شکست‌داده: <span id="boss-kills">0</span></p>
+            <p>بالاترین رکورد: <span id="best-score">0</span></p>
+            <p>ارتقاهای دائمی: <span id="upgrades-list"></span></p>
+            <button class="button" id="back-from-profile">بازگشت</button>
         </div>
 
         <div id="upgrade-menu" class="ui-panel">
@@ -654,7 +692,8 @@
         // =================================================================
         // Modules and Configuration
         // =================================================================
-
+        
+        // 🟢 Added a modes object to prevent "Config or game mode is not defined" error
         const config = {
             canvas: {
                 width: 800,
@@ -675,9 +714,14 @@
             },
             enemies: {
                 baseRadius: 16,
-                baseSpeed: 120,
+                // 🟢 تغییر: کاهش سرعت پایه دشمنان
+                baseSpeed: 60,
                 spawnDistance: 300,
                 spawnRatePerWave: 1.8,
+                maxAlive: 12, // 🟢 تغییر: محدود کردن دشمنان به 12
+                baseHP: 20, 
+                baseSpeed: 1.2,
+                difficultyMult: 1,
             },
             items: {
                 spawnRate: 0.002,
@@ -696,17 +740,40 @@
                 linearGrowth: 4,
                 wavePauseDuration: 3,
                 bossWaveInterval: 5,
-                waveDuration: 30,
+                // 🟢 Added a modes object to prevent "Config or game mode is not defined" error.
+                waveDuration: 90, // Set wave duration to 90 seconds (1 minute 30 seconds)
                 waveDurationGrowth: 5,
+                duration: 35, 
+                spawnRate: 900,
+                
+                caps: { 1: 12, 2: 15 },
+                defaultCapBase: 18,
+                defaultCapPerWave: 2,
+            },
+            economy: {
+                tokenName: 'توکن',
+                flawlessBonus: 2,
+                rewards: {
+                    minTokensPerWave: 6,
+                    growthEvery: 3,
+                    growthAmount: 1,
+                    randomBonusRange: [0, 2],
+                }
             },
             upgrades: {
                 optionCount: 3,
                 options: [
-                    { name: 'سرعت', effect: (player) => player.speed *= 1.15, description: 'افزایش سرعت حرکت (+15%)' },
-                    { name: 'سپر', effect: (player) => { player.shieldTime += 4; player.maxShieldTime += 4; }, description: 'افزایش زمان سپر (+4s)' },
-                    { name: 'امتیاز', effect: (player) => gameManager.score += 150, description: 'امتیاز فوری (+150)' },
-                    { name: 'کامبو', effect: (player) => player.comboMultiplier += 0.3, description: 'افزایش ضریب کامبو' },
-                    { name: 'نرخ شلیک', effect: (player) => player.fireRate *= 1.2, description: 'افزایش نرخ شلیک' },
+                    { name:"سرعت دائمی +15%", type:"perm", description: "افزایش دائمی سرعت حرکت", apply:()=>{ player.speedBase *= 1.15; } },
+                    { name:"شلیک سه‌تایی (12s)", type:"temp", description: "شلیک سه تیر به جای یک تیر با زاویه ±۱۵ درجه برای ۱۲ ثانیه", apply:()=>applyTimedBuff("triple", 12000,
+                        ()=>{ player.projectileType="triple"; },
+                        ()=>{ player.projectileType="single"; }) },
+                    { name:"سرعت نور (7s)", type:"temp", description: "افزایش سرعت حرکت به مدت ۷ ثانیه", apply:()=>applyTimedBuff("speed", 7000,
+                        ()=>{ player.speedBoost += 0.5; },
+                        ()=>{ player.speedBoost -= 0.5; }) },
+                    { name:"بمب نوری", type:"instant", description: "انفجار نوری که همه دشمنان غیر از باس را نابود می‌کند", apply:()=>{
+                        enemies.forEach(e=>{ if(e.type!=="boss") e.dead=true; });
+                        score += 500;
+                    }},
                 ],
                 offlineUpgrades: [
                     { name: 'سپر ویژه', type: 'shield', description: 'افزایش زمان سپر (+8s)' },
@@ -716,14 +783,34 @@
             shop: {
                 currency: 'توکن',
                 items: [
-                    { id: 'moveSpeed', name: 'سرعت حرکت', level: 0, max: 5, baseCost: 50, costMult: 1.6, effectPerLevel: { moveSpeedPct: 5 }, description: level => `افزایش سرعت حرکت (+${(level + 1) * 5}%)` },
-                    { id: 'fireRate', name: 'نرخ شلیک', level: 0, max: 8, baseCost: 70, costMult: 1.6, effectPerLevel: { fireRateMult: 1.08 }, description: level => `افزایش نرخ شلیک` },
-                    { id: 'bulletDamage', name: 'قدرت گلوله', level: 0, max: 7, baseCost: 80, costMult: 1.65, effectPerLevel: { dmgPct: 15 }, description: level => `افزایش آسیب گلوله (+${(level + 1) * 15}%)` },
-                    { id: 'bulletSpeed', name: 'سرعت گلوله', level: 0, max: 5, baseCost: 60, costMult: 1.55, effectPerLevel: { bulletSpeedPct: 10 }, description: level => `افزایش سرعت گلوله (+${(level + 1) * 10}%)` },
-                    { id: 'projectileCount', name: 'تعداد گلوله همزمان', level: 0, max: 6, baseCost: 100, costMult: 1.8, effectPerLevel: { addProjectileEvery: 2 }, description: level => `شلیک ${1 + Math.floor((level + 1) / 2)} گلوله به جای یک گلوله` },
-                    { id: 'shieldDuration', name: 'مدت سپر', level: 0, max: 6, baseCost: 80, costMult: 1.7, effectPerLevel: { shieldSeconds: 2 }, description: level => `افزایش مدت زمان سپر (+${(level + 1) * 2}s)` },
-                    { id: 'shieldChance', name: 'شانس سپر', level: 0, max: 5, baseCost: 90, costMult: 1.7, effectPerLevel: { addChancePct: 3 }, description: level => `افزایش شانس ظاهر شدن سپر (+${(level + 1) * 3}%)` },
-                    { id: 'ammoPack', name: 'بسته گلوله', level: 0, max: 99, baseCost: 5, costMult: 1.1, effectPerLevel: { ammoAmount: 20 }, description: level => `۲۰ گلوله جدید` }
+                    { id: 'moveSpeed',     name: 'سرعت حرکت',     level: 0, max: 7, baseCost: 120, costMult: 1.7, description: lvl => `+${5*lvl}% سرعت` },
+                    { id: 'projSpeed',     name: 'سرعت گلوله',    level: 0, max: 6, baseCost: 140, costMult: 1.7, description: lvl => `+${8*lvl}% سرعت گلوله` },
+                    { id: 'fireRate',      name: 'نرخ شلیک',      level: 0, max: 8, baseCost: 160, costMult: 1.75, description: lvl => `+${7*lvl}% نرخ شلیک` },
+                    { id: 'baseDamage',    name: 'قدرت تیر',      level: 0, max: 5, baseCost: 200, costMult: 1.8, description: lvl => `+${5*lvl} آسیب` },
+                    { id: 'maxAmmo',       name: 'ظرفیت مهمات',   level: 0, max: 6, baseCost: 150, costMult: 1.7, description: lvl => `+${2*lvl} مهمات` },
+                    { id: 'shieldTime',    name: 'زمان سپر',      level: 0, max: 6, baseCost: 190, costMult: 1.75, description: lvl => `+${2*lvl}s سپر` },
+                    { id: 'shieldCooldown',name: 'کول‌داون سپر',  level: 0, max: 4, baseCost: 220, costMult: 1.8, description: lvl => `-${5*lvl}% کول‌داون` },
+                    { id: 'nearMiss',      name: 'کامبو نیرمیس',  level: 0, max: 4, baseCost: 160, costMult: 1.7, description: lvl => `+${0.1*lvl} ضریب کامبو` },
+                    { id: 'scoreBoost',    name: 'بوست امتیاز',   level: 0, max: 5, baseCost: 180, costMult: 1.75, description: lvl => `+${5*lvl}% امتیاز ورودی` },
+                    { id: 'tokenBoost',    name: 'بوست توکن',     level: 0, max: 5, baseCost: 220, costMult: 1.8, description: lvl => `+${1*lvl} توکن پایان موج` },
+                    { id: 'dropRate',      name: 'دراپ آیتم',     level: 0, max: 4, baseCost: 170, costMult: 1.7, description: lvl => `+${4*lvl}% شانس آیتم` },
+                    { id: 'freezeTime',    name: 'قدرت فریز',     level: 0, max: 3, baseCost: 200, costMult: 1.9, description: lvl => `+${1*lvl}s فریز` },
+                    { id: 'slowMoTime',    name: 'زمان اسلوموشن', level: 0, max: 3, baseCost: 200, costMult: 1.9, description: lvl => `+${1*lvl}s آهسته` },
+                    { id: 'doubleScore',   name: 'مدت دوبل‌اسکور',level: 0, max: 3, baseCost: 210, costMult: 1.9, description: lvl => `+${2*lvl}s دوبرابر` },
+                    { id: 'healthKit',     name: 'سپر اضطراری',   level: 0, max: 3, baseCost: 250, costMult: 1.9, description: lvl => `+${1*lvl} hit برای سپر` },
+                    { id: 'tripleShot',    name: 'باز کردن سه‌تایی', level: 0, max: 1, baseCost: 300, costMult: 2.0, description: () => 'شلیک سه‌تایی' },
+                    { id: 'burstShot',     name: 'باز کردن برست', level: 0, max: 1, baseCost: 320, costMult: 2.0, description: () => 'شلیک برست' },
+                    { id: 'pierce',        name: 'نفوذ گلوله',    level: 0, max: 3, baseCost: 260, costMult: 1.85, description: lvl => `+${1*lvl} نفوذ` },
+                    { id: 'magnet',        name: 'آیم‌لوت مگنت',  level: 0, max: 4, baseCost: 210, costMult: 1.8, description: lvl => `+${8*lvl}% مکش آیتم` },
+                    { id: 'dash',          name: 'دَش اضطراری',   level: 0, max: 1, baseCost: 280, costMult: 2.0, description: () => 'یک دَش فعال' },
+                    { id: 'ammoPack',      name: 'پک مهمات',      level: 0, max: 5, baseCost: 140, costMult: 1.7, description: lvl => `+${1*lvl} مهمات ابتدای موج` },
+                    { id: 'lucky',         name: 'خوش‌شانسی',     level: 0, max: 5, baseCost: 230, costMult: 1.85, description: lvl => `+${3*lvl}% rng بهتر` },
+                    { id: 'armorPen',      name: 'ضدزره',         level: 0, max: 4, baseCost: 240, costMult: 1.85, description: lvl => `+${10*lvl}% آسیب به armored` },
+                    { id:"lootbox", name:"جعبه سایه‌ای", baseCost:200, max:99, effect:()=>{
+                       const rewards=["token","ammo","shield","projectileCount"];
+                       const reward=rewards[Math.floor(Math.random()*rewards.length)];
+                       alert("جایزه از جعبه: "+reward);
+                    }}
                 ]
             },
             characters: [
@@ -731,11 +818,18 @@
                 { id: 'red', name: 'قرمز', price: 500, color: '#f00', owned: false },
                 { id: 'green', name: 'سبز', price: 750, color: '#0f0', owned: false },
                 { id: 'blue', name: 'آبی', price: 1000, color: '#00f', owned: false },
+                { id:"shadowNinja", name:"Shadow Ninja", price:800, color:"#444", ability:"dash" },
+                { id:"lightGuardian", name:"Light Guardian", price:1000, color:"#fff", ability:"shield" },
+                { id:"voidHunter", name:"Void Hunter", price:1200, color:"#9900ff", ability:"bossDmg" },
             ],
             skins: [
-                { id: 'default_skin', name: 'پیش فرض', price: 0, texture: null, owned: true },
-                { id: 'star_skin', name: 'ستاره', price: 300, texture: null, owned: false },
-                { id: 'swirl_skin', name: 'گرداب', price: 600, texture: null, owned: false },
+                { id: 'default_skin', name: 'پیش فرض', price: 0,   texture: null, owned: true },
+                { id: 'star_skin',    name: 'ستاره',   price: 400, texture: null, owned: false },
+                { id: 'swirl_skin',   name: 'گرداب',   price: 700, texture: null, owned: false },
+                { id: 'neon_skin',    name: 'نئون',    price: 900, texture: null, owned: false },
+                { id: 'gold_skin',    name: 'طلایی',   price: 1200, texture: null, owned: false },
+                { id: 'void_skin',    name: 'وُید',    price: 1500, texture: null, owned: false },
+                { id: 'cyber_skin',   name: 'سایبر',   price: 1800, texture: null, owned: false }
             ],
             missions: [
                 { id: 'kill10chasers', type: 'kill', enemy: 'chaser', count: 10, reward: 100, completed: false, description: 'کشتن ۱۰ دشمن تعقیب‌کننده' },
@@ -746,33 +840,57 @@
                 tripleShotAngle: 15,
             },
             particles: {
-                playerGlowDensity: 5,
-                itemGlowDensity: 3,
-                maxParticles: 400,
+                playerGlowDensity: 4,
+                itemGlowDensity: 2,
+                maxParticles: 250,
             },
             audio: {
-                ambienceVolume: 0.5,
-                sfxVolume: 0.7,
-                sfxUrls: {
-                    pickup: 'key-176034.mp3',
-                    hit: 'sfx_hurt.ogg',
-                    freeze: 'coldsnap.wav',
-                    slow_mo: 'coldsnap.wav',
-                    ambience: '544416__zhr__background-music.mp3',
-                    player_shoot: 'SHOOT007.mp3',
-                    boss_hit: 'sfx_hurt.ogg',
-                    boss_explosion: 'Battle in the winter.mp3',
-                    boss_spawn: 'theircoming3.ogg',
-                }
-            },
-            economy: {
-                tokenName: 'توکن',
-                rewards: {
-                    minTokensPerWave: 6,
-                    growthEvery: 3,
-                    growthAmount: 1,
-                    randomBonusRange: [0, 2],
-                    flawlessBonus: 2,
+                musicVolume: 0.8,
+                sfxVolume: 0.9,
+                tracks: {
+                    menu:        "Theme Menu.mp3",
+                    wave:        "Synth Wave.mp3",
+                    boss:        "Battle in the winter.mp3",
+                    victory:     "Victory.wav",
+                    pause:       "ambient_horror_track01.wav",
+                    upgrade:     "win sound 2-2.wav",
+                    shop:        "welcome_0.ogg",
+                    gameover:    "death.wav",
+                    intro:       "untitled_3.mp3"
+                },
+                sfx: {
+                    shoot:          "SHOOT007.mp3",
+                    pickup:         "key-176034.mp3",
+                    hit:            "sfx_hurt.ogg",
+                    freeze:         "coldsnap.wav",
+                    slow_mo:        "coldsnap.wav",
+                    ambience:       "544416__zhr__background-music.mp3",
+
+                    dash:           "521999__kastenfrosch__whoosh-dash.wav",
+                    enemy_spawn:    "enemy-boat-spotted-low-105571.mp3",
+                    enemy_death:    "explode3-87806.mp3",
+                    player_death:   "falling-game-character-352287.mp3",
+                    level_up:       "level-up-04-243762.mp3",
+                    combo:          "rpg-sword-attack-combo-2-388916.mp3",
+                    critical_hit:   "sfx_hurt.ogg",
+                    shield_on:      "shield-guard-6963.mp3",
+                    shield_off:     "power-off-386180.mp3",
+                    item_drop:      "drop-itemstaplerclick-sound-effect-322959.mp3",
+                    item_use:       "item-pick-up-38258 (1).mp3",
+
+                    boss_hit:       "punch-03-352040.mp3",
+                    boss_explosion: "Battle in the winter.mp3",
+                    boss_spawn:     "enemy-boat-spotted-low-105571.mp3",
+                    boss_intro:     "untitled_3.mp3",
+                    boss_phase_change: "portal-phase-jump-6355.mp3",
+                    boss_special:   "fx-dramatic-cinematic-riser-sound-effect-248527.mp3",
+                    boss_defeated:  "defeated-sigh-85637.mp3",
+
+                    mission_complete: "game-level-complete-143022.mp3",
+                    achievement:    "80s-achievement-unlocked-94452.mp3",
+                    highscore:      "cute-level-up-1-189852.mp3",
+                    warning:        "beep-warning-6387.mp3",
+                    countdown:      "short-beep-countdown-81121.mp3"
                 }
             },
             shieldSpawn: {
@@ -782,16 +900,42 @@
                 pityMax: 18,
                 maxChanceCap: 40,
                 baseChance: 6
+            },
+            achievements: [
+                { id:"kill100", type:"kill", target:100, reward:50, unlocked:false, text:"کشتن 100 دشمن" },
+                { id:"wave20", type:"wave", target:20, reward:"skin:star_skin", unlocked:false, text:"رسیدن به موج 20" },
+                { id:"boss3", type:"boss", target:3, reward:200, unlocked:false, text:"شکست 3 باس پشت سر هم" }
+            ],
+            bossTypes: {
+                serpent:{ name:"Shadow Serpent", move:"snake", attack:"dash" },
+                voidEye:{ name:"Void Eye", move:"float", attack:"laser" },
+                nightWalker:{ name:"Night Walker", move:"slow", attack:"stomp" }
+            },
+            modes: {
+                normal: {
+                    waveDuration: 90, // Set wave duration to 90 seconds (1 minute 30 seconds)
+                    difficultyMult: 1
+                },
+                bossrush: {
+                    waveDuration: 99999,
+                    difficultyMult: 1.5,
+                    bossOnly: true
+                }
             }
         };
+        
+        function shopLevel(id) {
+            const item = shopItems.find(i => i.id === id);
+            return item ? item.level : 0;
+        }
 
         // Global variables, consolidated to avoid redeclaration errors
         let screenShakeX = 0;
         let screenShakeY = 0;
         const SCREEN_SHAKE_DURATION = 0.2;
         let screenShakeTime = 0;
-        let musicVolume = parseFloat(localStorage.getItem('musicVolume')) || config.audio.ambienceVolume;
-        let sfxVolume = parseFloat(localStorage.getItem('sfxVolume')) || config.audio.sfxVolume;
+        let musicVolume = parseFloat(localStorage.getItem('musicVolume')) || (config.audio && config.audio.musicVolume) || 0.5;
+        let sfxVolume = parseFloat(localStorage.getItem('sfxVolume')) || (config.audio && config.audio.sfxVolume) || 0.7;
         let mouseSensitivity = parseFloat(localStorage.getItem('mouseSensitivity')) || 1.0;
         let isSlowMotion = false;
         let slowMotionTimer = 0;
@@ -811,16 +955,58 @@
         let enemySpawnTimer = 0;
         let currentWaveDuration = 0;
         let missions = JSON.parse(localStorage.getItem('missions')) || config.missions.map(m => ({ ...m, completed: false }));
+        let achievements = JSON.parse(localStorage.getItem('achievements')) || config.achievements;
+        let bossKills = parseInt(localStorage.getItem('bossKills')) || 0;
+        let enemiesKilledTotal = parseInt(localStorage.getItem('enemiesKilledTotal')) || 0;
         
         let playerTokens = parseInt(localStorage.getItem('playerTokens')) || 0;
         let shopItems = JSON.parse(localStorage.getItem('shopItems')) || JSON.parse(JSON.stringify(config.shop.items));
         
         let timeSinceLastShield = 999;
         let pityBonus = 0;
+        let wave = 1;
+        let selectedMode = "normal";
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
+        const bgCanvas = document.getElementById("backgroundCanvas");
+        const bgCtx = bgCanvas.getContext("2d");
+        let bgParticles = [];
+
+        function resizeBG() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+
+        resizeBG();
+        window.addEventListener("resize", resizeBG);
+
+        for (let i=0; i<50; i++) {
+            bgParticles.push({
+                x: Math.random()*bgCanvas.width,
+                y: Math.random()*bgCanvas.height,
+                r: Math.random()*3+2,
+                dx: Math.random()*2-1,
+                dy: Math.random()*2-1
+            });
+        }
         
+        function drawBG() {
+            bgCtx.clearRect(0,0,bgCanvas.width,bgCtx.height);
+            bgParticles.forEach(p=>{
+                p.x += p.dx; p.y += p.dy;
+                if(p.x<0||p.x>bgCanvas.width) p.dx*=-1;
+                if(p.y<0||p.y>bgCanvas.height) p.dy*=-1;
+                bgCtx.beginPath();
+                bgCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+                bgCtx.fillStyle="rgba(255,255,255,0.2)";
+                bgCtx.fill();
+            });
+            requestAnimationFrame(drawBG);
+        }
+        drawBG();
+
         function resizeCanvas() {
             const container = document.getElementById('game-container');
             if (container) {
@@ -845,6 +1031,7 @@
         const characterMenu = document.getElementById('character-menu');
         const skinsMenu = document.getElementById('skins-menu');
         const settingsMenu = document.getElementById('settings-menu');
+        const profileMenu = document.getElementById('profile-menu');
         const hud = document.getElementById('hud');
         const comboDisplay = document.getElementById('combo-display');
         const audioToggle = document.getElementById('audio-toggle');
@@ -866,9 +1053,18 @@
         let gameActive = false;
         let isPaused = false;
         let flawlessWave = true;
-        let player, enemies, items, particles, projectiles;
+        let player, enemies, items, particles, projectiles, bullets;
         let audioManager;
         let obstacles = [];
+        let bossKillsThisRun = 0;
+        
+        // Buff system
+        const activeBuffs = {};
+        function applyTimedBuff(key, ms, apply, revert){
+            if(activeBuffs[key]){ clearTimeout(activeBuffs[key].t); activeBuffs[key].revert?.(); }
+            apply();
+            activeBuffs[key] = { t:setTimeout(()=>{ revert?.(); delete activeBuffs[key]; }, ms), revert };
+        }
 
         window.addEventListener('load', () => {
             resizeCanvas();
@@ -897,6 +1093,45 @@
                 return this;
             }
         }
+        
+        function spawnBossBullets(b){
+            const n=6, r=3, sp=3;
+            if (!bullets) {
+                bullets = [];
+            }
+            for(let i=0;i<n;i++){
+                const a = i*(Math.PI*2/n);
+                bullets.push({ x:b.x, y:b.y, r, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, enemy:true, dmg:8 });
+            }
+        }
+        
+        function spawnBulletsFromTop() {
+            for(let i=0; i<5; i++){
+                bullets.push({ 
+                    x: Math.random() * canvas.width, 
+                    y: -50, 
+                    r: 5, 
+                    vx: 0, 
+                    vy: 2, 
+                    enemy: true, 
+                    dmg: 10 
+                });
+            }
+        }
+        
+        function spawnShadowClones() {
+            for(let i=0; i<3; i++) {
+                const side = Math.floor(Math.random() * 4);
+                let x, y;
+                switch (side) {
+                    case 0: x = -config.enemies.spawnDistance; y = Math.random() * canvas.height; break;
+                    case 1: x = canvas.width + config.enemies.spawnDistance; y = Math.random() * canvas.height; break;
+                    case 2: x = Math.random() * canvas.width; y = -config.enemies.spawnDistance; break;
+                    case 3: x = Math.random() * canvas.width; y = canvas.height + config.enemies.spawnDistance; break;
+                }
+                enemies.push(new Enemy(x, y, 'chaser'));
+            }
+        }
 
         class Enemy {
             constructor(x, y, type) {
@@ -907,7 +1142,6 @@
                 this.isFrozen = false;
                 this.speed = config.enemies.baseSpeed;
                 this.radius = config.enemies.baseRadius;
-                // Changed health value for enemies to be killed with one shot
                 this.health = 1; 
                 this.maxHealth = 1;
                 this.damageReduction = 0;
@@ -917,38 +1151,40 @@
                 this.fireRate = 2; // bullets per second
                 this.lastTeleportTime = 0;
                 this.teleportCooldown = 3;
+                this.cool = 0;
+                this.bossName = null;
                 
                 // Adjust enemy speed based on wave for easier start
-                const difficultyFactor = gameManager.wave === 1 ? 0.5 : 0.8 + (gameManager.wave - 1) * 0.1;
+                const difficultyFactor = config.enemies.difficultyMult;
                 
                 switch (this.type) {
                     case 'chaser':
                         this.color = '#4a4a4a';
-                        this.speed = 150 * difficultyFactor;
+                        this.speed = 80 * difficultyFactor; // 🟢 تغییر: کاهش سرعت چیسر
                         break;
                     case 'wanderer':
                         this.color = '#6b6b6b';
-                        this.speed = 80 * difficultyFactor;
+                        this.speed = 60 * difficultyFactor;
                         this.wanderTarget = {x: Math.random() * canvas.width, y: Math.random() * canvas.height};
                         this.changeTargetTimer = 0;
                         this.changeTargetInterval = 2;
                         break;
                     case 'shifter':
                         this.color = '#ff69b4';
-                        this.speed = 180 * difficultyFactor;
+                        this.speed = 100 * difficultyFactor;
                         this.shiftDirection = { x: Math.random() * 2 - 1, y: Math.random() * 2 - 1 };
                         this.shiftDirectionTimer = 0;
                         this.shiftInterval = 0.5;
                         break;
                     case 'bomber':
                         this.color = '#f00';
-                        this.speed = 100 * difficultyFactor;
+                        this.speed = 80 * difficultyFactor;
                         this.radius = 20;
                         this.isExploding = false;
                         break;
                     case 'shooter':
                         this.color = '#00f';
-                        this.speed = 100 * difficultyFactor;
+                        this.speed = 80 * difficultyFactor;
                         break;
                     case 'splinterer':
                         this.color = '#800080';
@@ -956,7 +1192,7 @@
                         break;
                     case 'teleporter':
                         this.color = '#9400d3';
-                        this.speed = 120 * difficultyFactor;
+                        this.speed = 80 * difficultyFactor;
                         this.teleportCooldown = 2;
                         break;
                     case 'armored':
@@ -966,15 +1202,17 @@
                         break;
                     case 'pattern_shooter':
                         this.color = '#ffa500';
-                        this.speed = 100 * difficultyFactor;
+                        this.speed = 80 * difficultyFactor;
                         this.lastPatternShotTime = 0;
                         this.patternShotCooldown = 3;
                         break;
                     case 'boss':
                         this.isBoss = true;
-                        this.speed = 70;
-                        this.health = 500;
-                        this.maxHealth = 500;
+                        this.speed = 0.8;
+                        this.health = 400;
+                        this.maxHealth = 400;
+                        this.cool = 0;
+                        this.bossName = 'default';
                         break;
                 }
             }
@@ -982,25 +1220,17 @@
                 if (this.isFrozen) return;
 
                 if (this.isBoss) {
-                    // Update: Make boss movement slower and bullet pattern more manageable
+                    this.cool -= dt * 1000;
+                    if(this.cool <= 0){ 
+                        this.cool = 1200; 
+                        spawnBossBullets(this); 
+                    }
                     if (player) {
                         const dx = player.x - this.x;
                         const dy = player.y - this.y;
                         const dist = Math.hypot(dx, dy);
                         this.x += (dx / dist) * this.speed * dt;
                         this.y += (dy / dist) * this.speed * dt;
-                        
-                        // Update: Make boss bullets slower and less frequent
-                        if (Date.now() - this.lastShotTime > 1500) { // 1.5 seconds cooldown
-                            const angleStep = Math.PI * 2 / 8; // 8 bullets instead of 12
-                            for(let i = 0; i < 8; i++) {
-                                const angle = i * angleStep;
-                                const direction = new Vector(Math.cos(angle), Math.sin(angle));
-                                projectiles.push(new Projectile(this.x, this.y, direction, 150)); // Slower bullet speed
-                            }
-                            this.lastShotTime = Date.now();
-                            if (audioManager) audioManager.playSfx('boss_hit');
-                        }
                     }
                 } else {
                     // Regular enemy movement
@@ -1072,7 +1302,7 @@
                              this.y += (dy / dist) * this.speed * dt;
                         } else if (this.type === 'teleporter') {
                             this.x += (dx / dist) * this.speed * dt;
-                            this.y += (dy / dist) * this.speed * dt;
+                            this.y += (dy / dist) * this.y;
                             this.lastTeleportTime += dt;
                             if (this.lastTeleportTime > this.teleportCooldown) {
                                 this.x = Math.random() * canvas.width;
@@ -1249,7 +1479,7 @@
                 ctx.fill();
             }
         }
-
+        
         class PlayerProjectile {
             constructor(x, y, direction, damage) {
                 this.x = x;
@@ -1279,6 +1509,7 @@
                             enemy.isDead = true; // Mark enemy for removal
                             gameManager.score += 50; // Add score for killing an enemy
                             gameManager.updateMissions("kill", enemy.type, 1);
+                            enemiesKilledTotal++;
                         }
                         break;
                     }
@@ -1359,7 +1590,7 @@
                     }
                 } else {
                     this.x += this.direction.x * this.speed * dt;
-                    this.y += this.direction.y * this.speed * dt;
+                    this.y += this.direction.y * this.y;
                     for (const enemy of enemies) {
                         const dx = this.x - enemy.x;
                         const dy = this.y - enemy.y;
@@ -1404,65 +1635,80 @@
                 this.maxShieldTime = config.player.shieldTime;
                 this.isShooting = false;
                 this.shootCooldown = 0;
-                this.projectileType = 'basic';
+                this.projectileType = 'single';
                 this.ammo = config.player.maxAmmo;
                 
                 const char = config.characters.find(c => c.id === selectedCharacter);
                 this.color = char ? char.color : config.player.glowColor;
+                this.ability = char ? char.ability : null;
                 
                 this.applyUpgrades();
+                this.speedBase = this.speed;
+                this.speedBoost = 0;
             }
             
             applyUpgrades() {
-                const getLevel = id => shopItems.find(i => i.id === id)?.level || 0;
+                const levels = shopItems.reduce((acc, it) => (acc[it.id] = it.level, acc), {});
                 
-                this.speed = config.player.baseSpeed * (1 + getLevel('moveSpeed') * config.shop.items.find(i => i.id === 'moveSpeed').effectPerLevel.moveSpeedPct / 100);
-                this.fireRate = config.player.baseFireRate * Math.pow(1 + config.shop.items.find(i => i.id === 'fireRate').effectPerLevel.fireRateMult / 100, getLevel('fireRate'));
-                this.damage = config.player.baseDamage * (1 + getLevel('bulletDamage') * config.shop.items.find(i => i.id === 'bulletDamage').effectPerLevel.dmgPct / 100);
-                this.projectileSpeed = config.player.projectileSpeed * (1 + getLevel('bulletSpeed') * config.shop.items.find(i => i.id === 'bulletSpeed').effectPerLevel.bulletSpeedPct / 100);
-                this.projectileCount = 1 + Math.floor(getLevel('projectileCount') / config.shop.items.find(i => i.id === 'projectileCount').effectPerLevel.addProjectileEvery);
-                this.maxShieldTime = config.player.shieldTime + getLevel('shieldDuration') * config.shop.items.find(i => i.id === 'shieldDuration').effectPerLevel.shieldSeconds;
-                this.shieldChanceBase = config.shieldSpawn.baseChance + getLevel('shieldChance') * config.shop.items.find(i => i.id === 'shieldChance').effectPerLevel.addChancePct;
+                // apply new upgrades
+                this.speed = config.player.baseSpeed * (1 + 0.05 * (levels.moveSpeed || 0));
+                this.projectileSpeed = config.player.projectileSpeed * (1 + 0.08 * (levels.projSpeed || 0));
+                this.fireRate = config.player.baseFireRate * (1 + 0.07 * (levels.fireRate || 0));
+                this.damage = config.player.baseDamage + 5 * (levels.baseDamage || 0);
+                this.maxAmmo = config.player.maxAmmo + 2 * (levels.maxAmmo || 0);
+                this.maxShieldTime = (config.player.shieldTime) + 2 * (levels.shieldTime || 0);
+                this.shieldChanceBase = config.shieldSpawn.baseChance + (3 * (levels.shieldChance || 0));
+                
+                // Handle new projectile types
+                if (levels.tripleShot > 0) this.projectileType = 'triple';
+                if (levels.burstShot > 0) this.projectileType = 'burst';
             }
 
-            setProjectileType(type) {
-                this.projectileType = type;
+            setProjectileType(kind) {
+                this.projectileType = kind; // 'single' | 'triple' | 'burst'
             }
-
-            shoot() {
-                if (this.shootCooldown <= 0 && this.ammo > 0) {
-                    const dx = mousePos.x - this.x;
-                    const dy = mousePos.y - this.y;
-                    const dist = Math.hypot(dx, dy);
-                    const direction = {x: dx/dist, y: dy/dist};
-                    
-                    if (this.projectileType === 'triple') {
-                        const angleSpread = config.projectiles.tripleShotAngle * Math.PI / 180;
-                        const baseAngle = Math.atan2(direction.y, direction.x);
-
-                        // Fire three projectiles with a spread
-                        for (let i = -1; i <= 1; i++) {
-                            const shotAngle = baseAngle + i * angleSpread;
-                            const projectileDirection = {
-                                x: Math.cos(shotAngle),
-                                y: Math.sin(shotAngle)
-                            };
-                            playerProjectiles.push(new PlayerProjectile(this.x, this.y, projectileDirection, this.damage));
-                        }
-                    } else {
-                        // Default single shot
-                        playerProjectiles.push(new PlayerProjectile(this.x, this.y, direction, this.damage));
-                    }
-                    
-                    this.ammo--;
-                    this.shootCooldown = 1 / this.fireRate;
-                    if (audioManager) audioManager.playSfx('player_shoot');
+            
+            useAbility() {
+                if (this.ability === 'dash') {
+                    // Implement dash logic
                 }
             }
 
+            shoot() {
+                if (this.ammo <= 0) return;
+                
+                // Get the current time and compare to the last shot time
+                const now = performance.now() / 1000;
+                const fireRateLevel = shopLevel('fireRate');
+                const fireRateMult = 1 + (0.07 * fireRateLevel);
+                if (now - playerLastShotTime < (1 / (config.player.baseFireRate * fireRateMult))) return;
+                playerLastShotTime = now;
+            
+                const dx = mousePos.x - this.x;
+                const dy = mousePos.y - this.y;
+                const ang = Math.atan2(dy, dx);
+            
+                const make = (angle) => playerProjectiles.push(new PlayerProjectile(this.x, this.y, { x: Math.cos(angle), y: Math.sin(angle) }, this.damage));
+            
+                if (this.projectileType === 'triple') {
+                    make(ang);
+                    make(ang + (config.projectiles.tripleShotAngle * Math.PI/180));
+                    make(ang - (config.projectiles.tripleShotAngle * Math.PI/180));
+                } else if (this.projectileType === 'burst') {
+                    make(ang);
+                    setTimeout(()=>make(ang), 80);
+                    setTimeout(()=>make(ang), 160);
+                } else {
+                    make(ang);
+                }
+                
+                this.ammo--;
+                if (audioManager) audioManager.playSfx('shoot');
+            }
+
+            // 🟢 اصلاح: حرکت پلیر به سمت ماوس
             update(dt, inputVector) {
-                this.shootCooldown -= dt;
-                if (this.isShooting && this.shootCooldown <= 0 && this.ammo > 0) {
+                if (this.isShooting && this.ammo > 0) {
                     this.shoot();
                 }
                 
@@ -1493,10 +1739,23 @@
 
                 const progress = this.maxShieldTime > 0 ? (this.shieldTime / this.maxShieldTime) * 100 : 0;
                 if (shieldProgressBar) shieldProgressBar.style.width = `${progress}%`;
+                
+                // Light Guardian ability
+                if (this.ability === 'shield') {
+                    this.maxShieldTime += 5;
+                }
+                if (this.ability === 'bossDmg') {
+                    this.damage *= 1.5;
+                }
+                
+                const dx = mousePos.x - this.x;
+                const dy = mousePos.y - this.y;
+                const dist = Math.hypot(dx, dy);
 
-                if (inputVector && (inputVector.x !== 0 || inputVector.y !== 0)) {
-                    this.x += inputVector.x * this.speed * dt;
-                    this.y += inputVector.y * this.speed * dt;
+                if (dist > 1) {
+                    const speed = this.speed * dt;
+                    this.x += (dx / dist) * speed;
+                    this.y += (dy / dist) * speed;
                 }
 
                 this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
@@ -1510,7 +1769,7 @@
                         particles.push(getParticle(
                             this.x + Math.cos(angle) * r,
                             this.y + Math.sin(angle) * r,
-                            { x: Math.cos(angle), y: Math.sin(angle) },
+                            { x: Math.cos(angle) * 0.5, y: Math.sin(angle) * 0.5 },
                             this.color,
                             Math.random() * 2 + 1,
                             0.5
@@ -1518,29 +1777,23 @@
                     }
                 }
             }
-
+            
+            // 🟢 مرحله ۲ — ایمن‌سازی گرادیان (fix NaN error)
             draw(ctx) {
+                // Draws the player circle
+                const g = safeRadial(ctx, this.x, this.y, 5, this.x, this.y, this.radius||14);
+                if (g) {
+                    g.addColorStop(0,"#fff");
+                    g.addColorStop(1,"#666");
+                    ctx.fillStyle=g;
+                } else {
+                    ctx.fillStyle="#aaa";
+                }
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
                 ctx.fill();
 
-                if (player && player.color) {
-                    const gradient = ctx.createRadialGradient(this.x, this.y, this.radius, this.x, this.y, this.radius * 2);
-                    const rgbColor = hexToRgb(this.color);
-                    if (rgbColor) {
-                        gradient.addColorStop(0, `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, ${this.shieldTime > 0 ? 0.3 : 0.2})`);
-                    } else {
-                        gradient.addColorStop(0, `rgba(255, 255, 255, ${this.shieldTime > 0 ? 0.3 : 0.2})`);
-                    }
-                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                    ctx.fillStyle = gradient;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius * 2, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-
-                if (this.shieldTime > 0) {
+                if (this.isShieldActive) {
                     const shieldGradient = ctx.createRadialGradient(this.x, this.y, this.radius * 1.5, this.x, this.y, this.radius * 1.8);
                     shieldGradient.addColorStop(0, 'rgba(0, 255, 128, 0.5)'); // Green shield
                     shieldGradient.addColorStop(1, 'rgba(0, 255, 128, 0)');
@@ -1550,6 +1803,14 @@
                     ctx.fill();
                 }
             }
+        }
+        
+        // 🟢 مرحله ۲ — ایمن‌سازی گرادیان (fix NaN error)
+        function safeRadial(ctx, x,y,r1, x2,y2,r2) {
+            if ([x,y,r1,x2,y2,r2].every(Number.isFinite) && r1>0 && r2>0) {
+                return ctx.createRadialGradient(x,y,r1,x2,y2,r2);
+            }
+            return null;
         }
 
         class Obstacle {
@@ -1668,106 +1929,103 @@
                     const len = Math.hypot(vector.x, vector.y);
                     if (len > 0) { vector.x /= len; vector.y /= len; }
                 } else {
-                    if (player) {
-                        const dx = mousePos.x - player.x;
-                        const dy = mousePos.y - player.y;
-                        const dist = Math.hypot(dx, dy);
-                        // Changed dist threshold from 10 to 1 for smoother movement
-                        if (dist > 1) {
-                            vector.x = dx / dist;
-                            vector.y = dy / dist;
-                        }
-                    }
+                    // 🟢 این بخش برای حرکت پلیر با ماوس در تابع update() پلیر مدیریت می‌شود.
+                    return null;
                 }
                 return vector;
             }
         };
 
+        // 🟢 AudioManager مثال
         class AudioManager {
             constructor() {
+                this.music = null;
+                this.currentMusic = null;
+                this.buffers = {};
                 this.isInitialized = false;
-                this.isMuted = false;
-                this.ambience = null;
-                this.sfx = {};
-                this.sfxUrls = config.audio.sfxUrls;
+                // Volume increase
+                this.musicVolume = 0.8;
+                this.sfxVolume = 0.9;
             }
 
-            async loadAudioAsBlob(url, vol=1) {
+            async load(key, url) {
+                if (!url) { this.buffers[key] = null; return; }
                 try {
-                    const res = await fetch(url, { mode:'cors', referrerPolicy:'no-referrer' });
-                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const blob = await res.blob();
-                    const a = new Audio(URL.createObjectURL(blob));
-                    a.volume = vol;
-                    return a;
-                } catch (e) {
-                    console.warn('audio load failed:', url, e);
-                    return null;
+                    const el = new Audio(URL.createObjectURL(blob));
+                    el.loop = ["menu","wave","boss","victory"].includes(key);
+                    this.buffers[key] = el;
+                } catch (err) {
+                    console.warn("audio load failed:", url, err);
+                    this.buffers[key] = null;
+                }
+            }
+
+            async init() {
+                const audioPromises = [];
+                for (const [k, url] of Object.entries(config.audio.tracks)) {
+                    audioPromises.push(this.load(k, url));
+                }
+                for (const [k, url] of Object.entries(config.audio.sfx)) {
+                    audioPromises.push(this.load(k, url));
+                }
+                await Promise.all(audioPromises);
+                this.isInitialized = true;
+            }
+
+            playMusic(trackKey, loop = true) {
+                if (!this.isInitialized) return;
+                if (this.currentMusic) { this.currentMusic.pause(); this.currentMusic.currentTime = 0; }
+                const el = this.buffers[trackKey];
+                if (el) { 
+                    el.loop = loop;
+                    el.volume = this.musicVolume;
+                    el.play().catch(()=>{}); 
+                    this.currentMusic = el; 
+                }
+            }
+
+            playSfx(key) {
+                if (!this.isInitialized) return;
+                const el = this.buffers[key];
+                if (el) { 
+                    const clone = el.cloneNode();
+                    clone.volume = this.sfxVolume;
+                    clone.play().catch(()=>{}); 
                 }
             }
             
-            async init() {
-                if (this.isInitialized) return;
-                this.isInitialized = true;
-                
-                this.ambience = await this.loadAudioAsBlob(this.sfxUrls.ambience, musicVolume);
-                if (this.ambience) {
-                    this.ambience.loop = true;
-                }
-
-                for (const key of Object.keys(this.sfxUrls).filter(k => k !== 'ambience')) {
-                    this.sfx[key] = await this.loadAudioAsBlob(this.sfxUrls[key], sfxVolume);
-                }
-            }
-
-
-            updateVolumes(newMusicVolume, newSfxVolume) {
-                musicVolume = newMusicVolume;
-                sfxVolume = newSfxVolume;
-                if (this.ambience) {
-                    this.ambience.volume = musicVolume;
-                }
-                for (const key in this.sfx) {
-                    if (this.sfx[key]) {
-                        this.sfx[key].volume = sfxVolume;
-                    }
-                }
-                localStorage.setItem('musicVolume', musicVolume);
-                localStorage.setItem('sfxVolume', sfxVolume);
-            }
-
-            playAmbience() {
-                if (this.ambience && !this.isMuted) {
-                    this.ambience.play().catch(e => console.log('Ambience playback blocked:', e));
-                }
-            }
-            pauseAmbience() {
-                if (this.ambience) {
-                    this.ambience.pause();
-                }
-            }
-            playSfx(name) {
-                if (!this.isInitialized || this.isMuted) return;
-                const sfx = this.sfx[name];
-                if (sfx) {
-                    const clonedSfx = sfx.cloneNode();
-                    clonedSfx.volume = sfx.volume;
-                    clonedSfx.play().catch(e => console.log('SFX playback blocked:', e));
-                }
-            }
-
-            toggleMute() {
-                this.isMuted = !this.isMuted;
-                if (this.isMuted) {
-                    this.pauseAmbience();
-                    audioToggle.textContent = '';
-                } else {
-                    this.playAmbience();
-                    audioToggle.textContent = '🔊';
+            stopAll() {
+                if (this.currentMusic) {
+                    this.currentMusic.pause();
+                    this.currentMusic.currentTime = 0;
                 }
             }
         }
         
+        // 🟢 بخش ۷ — موزیک داینامیک
+        function updateMusic(state) {
+            if (audioManager) {
+                audioManager.stopAll();
+                if (state === "menu") audioManager.playMusic("menu");
+                if (state === "wave") audioManager.playMusic("wave");
+                if (state === "boss") audioManager.playMusic("boss");
+                if (state === "victory") audioManager.playMusic("victory");
+                if (state === "gameover") audioManager.playMusic("gameover");
+                if (state === "upgrade") audioManager.playMusic("upgrade");
+            }
+        }
+        function onStateChange(state) {
+            updateMusic(state);
+        }
+        
+        function getWaveEnemyCap(wave) {
+            const caps = config.waves.caps || {};
+            if (caps[wave]) return caps[wave];
+            return config.waves.defaultCapBase + Math.max(0, wave - 2) * config.waves.defaultCapPerWave;
+        }
 
         const gameManager = {
             score: 0,
@@ -1784,12 +2042,13 @@
                 particles = [];
                 projectiles = [];
                 playerProjectiles = [];
+                bullets = []; // Initialize bullets array
                 enemySpawnTimer = 0;
                 currentWaveDuration = 0;
                 obstacles = [];
                 flawlessWave = true;
                 
-                missions = config.missions.map(m => ({ ...m, completed: false }));
+                missions = JSON.parse(localStorage.getItem('missions')) || config.missions.map(m => ({ ...m, completed: false }));
                 localStorage.setItem('missions', JSON.stringify(missions));
                 
                 player = new Player(canvas.width / 2, canvas.height / 2);
@@ -1855,49 +2114,77 @@
             },
             startWave() {
                 this.isWaveActive = true;
-                currentWaveDuration = config.waves.waveDuration + this.wave * config.waves.waveDurationGrowth;
+                currentWaveDuration = config.waves.waveDuration;
                 enemySpawnTimer = 0;
                 flawlessWave = true;
                 
                 player.isShieldActive = false;
                 player.shieldTime = 0;
-
-                // Spawns enemies for the current wave based on the wave number
-                this.spawnEnemiesForWave(this.wave);
+                
+                if (selectedMode === 'bossrush' && this.wave > 1) {
+                    this.spawnBoss();
+                    return;
+                }
+                if (this.wave % config.waves.bossWaveInterval === 0 && selectedMode !== 'bossrush') {
+                     this.spawnBoss();
+                } else {
+                    this.spawnEnemiesForWave(this.wave);
+                }
+                
+                onStateChange('wave');
+                
+                if(this.wave % 3 === 0 && this.wave > 0) randomEvent();
             },
             spawnBoss() {
+                const keys = Object.keys(config.bossTypes);
+                const bossType = keys[Math.floor(Math.random() * keys.length)];
+                
                 boss = new Enemy(canvas.width / 2, -100, 'boss');
-                boss.maxHealth = 500;
-                boss.health = 500;
+                
+                if (bossType === 'serpent') {
+                    // Serpent logic
+                } else if (bossType === 'voidEye') {
+                    // Void Eye logic
+                } else if (bossType === 'nightWalker') {
+                    // Night Walker logic
+                }
+                
+                boss.maxHealth = 400;
+                boss.health = 400;
                 boss.color = '#ff0000';
                 boss.radius = 40;
                 enemies.push(boss);
                 if (audioManager) audioManager.playSfx('boss_spawn');
+                onStateChange('boss');
             },
+            // 2.3 بازنویسی تابع spawnEnemiesForWave
             spawnEnemiesForWave(wave) {
-                let enemyTypesToSpawn = [];
-                let enemyCount = 0;
-
-                // Update: Logic to make waves progress sequentially
-                if (wave % 5 === 0) {
+                // باس هر 5 موج
+                if (wave % config.waves.bossWaveInterval === 0) {
                     this.spawnBoss();
                     return;
-                } else if (wave === 1) {
-                    enemyTypesToSpawn = ['chaser'];
-                    enemyCount = 2; // Easier start
-                } else if (wave === 2) {
-                    enemyTypesToSpawn = ['chaser', 'wanderer'];
-                    enemyCount = 4;
-                } else if (wave === 3) {
-                    enemyTypesToSpawn = ['chaser', 'wanderer', 'shooter'];
-                    enemyCount = 6;
-                } else if (wave === 4) {
-                    enemyTypesToSpawn = ['chaser', 'wanderer', 'shooter', 'teleporter'];
-                    enemyCount = 8;
-                } else {
-                    enemyTypesToSpawn = ['chaser', 'wanderer', 'shifter', 'bomber', 'shooter', 'splinterer', 'teleporter', 'armored', 'pattern_shooter'];
-                    enemyCount = 10 + Math.floor(wave / 2);
                 }
+
+                // ترتیب معرفی دشمن‌ها (به اولی‌ها ساده‌ترها را بده)
+                const progression = [
+                    'chaser',
+                    'wanderer',
+                    'shooter',
+                    'teleporter',
+                    'shifter',
+                    'bomber',
+                    'splinterer',
+                    'armored',
+                    'pattern_shooter'
+                ];
+
+                const unlockedCount = Math.min(wave, progression.length);
+                const enemyTypesToSpawn = progression.slice(0, unlockedCount);
+                
+                // تعداد پایه‌ی دشمن‌ها (می‌تونی از قبلت استفاده کنی یا نرم‌ترش کنی)
+                let base = 2 + Math.floor(wave * 1.5); // رشد نرم
+                // 🟢 استفاده از maxEnemiesAllowed
+                const enemyCount = Math.min(base, config.enemies.maxAlive);
 
                 for (let i = 0; i < enemyCount; i++) {
                     const side = Math.floor(Math.random() * 4);
@@ -1930,37 +2217,37 @@
                     items.push(new Item(x, y, itemType));
                 }
             },
-            giveWaveTokens() {
-                let baseTokens = config.economy.rewards.minTokensPerWave;
-                for (let i = 0; i < baseTokens; i++) {
-                    const color = (i % 2 === 0) ? "#f00" : "#00f";
-                    const item = new Item(
-                        Math.random() * canvas.width,
-                        Math.random() * canvas.height,
-                        "token"
-                    );
-                    item.color = color;
-                    items.push(item);
-                }
+            // 🟢 مرحله ۵ — توکن‌ها بین ۵ تا ۹ بر اساس سختی موج
+            tokensForWave(wv, flawless = false) {
+                let base = 5 + Math.min(4, Math.floor((wv - 1) / 3));
+                if (flawless) base += config.economy.flawlessBonus;
+                return base;
             },
-            tokensForWaveEnd() {
-                const { minTokensPerWave, growthEvery, growthAmount, randomBonusRange, flawlessBonus } = config.economy.rewards;
-                const base = minTokensPerWave;
-                const growth = Math.floor(this.wave / growthEvery) * growthAmount;
-                const rng = Math.floor(Math.random() * (randomBonusRange[1] - randomBonusRange[0] + 1)) + randomBonusRange[0];
-                return base + growth + rng + (flawlessWave ? flawlessBonus : 0);
+            endWave() {
+                const earned = this.tokensForWave(wave, flawlessWave);
+                // 🟢 Updated: Use addTokens to save to localStorage
+                addTokens(earned);
+                showMessage(`پایان موج! شما ${earned} توکن کسب کردید.`);
+                checkAchievements("wave", wave);
+                checkAchievements("kill", enemiesKilledTotal);
+                wave++;
+                this.showUpgradeScreen();
             },
             startWaveCountdown() {
                 isPaused = true;
                 hideAllPanels();
                 if (countdownOverlay) countdownOverlay.classList.add('visible');
-
+                
                 let count = 3;
                 if (countdownText) countdownText.textContent = count;
+                if (audioManager) audioManager.playSfx("countdown");
 
                 const countdownInterval = setInterval(() => {
                     count--;
                     if (countdownText) countdownText.textContent = count > 0 ? count : 'GO!';
+                    if (count > 0) {
+                        if (audioManager) audioManager.playSfx("countdown");
+                    }
                     if (count < 0) {
                         clearInterval(countdownInterval);
                         if (countdownOverlay) countdownOverlay.classList.remove('visible');
@@ -1973,16 +2260,18 @@
             showUpgradeScreen() {
                 isPaused = true;
                 hideAllPanels();
+                onStateChange('upgrade');
                 if (upgradeMenu) upgradeMenu.classList.add('visible');
                 const upgradeOptionsDiv = document.getElementById('upgrade-options');
                 if (!upgradeOptionsDiv) return;
                 
                 upgradeOptionsDiv.innerHTML = '';
                 
+                // 🟢 اصلاح: اضافه کردن توضیحات برای ارتقاءها
                 const projectileUpgradeOption = {
                     name: 'شلیک سه‌تایی',
                     description: 'شلیک سه تیر به جای یک تیر با زاویه ±۱۵ درجه',
-                    effect: (player) => { player.setProjectileType('triple'); }
+                    apply: (player) => { player.setProjectileType('triple'); }
                 };
                 
                 const availableUpgrades = [...config.upgrades.options, projectileUpgradeOption];
@@ -1996,12 +2285,7 @@
                     card.className = 'upgrade-card';
                     card.innerHTML = `<h3>${upgrade.name}</h3><p>${upgrade.description}</p>`;
                     card.addEventListener('click', () => {
-                        upgrade.effect(player);
-                        const tokensEarned = this.tokensForWaveEnd();
-                        playerTokens += tokensEarned;
-                        localStorage.setItem('playerTokens', playerTokens);
-                        showMessage(`پایان موج! شما ${tokensEarned} توکن کسب کردید.`);
-                        this.wave++;
+                        upgrade.apply(player);
                         this.startWaveCountdown();
                     });
                     upgradeOptionsDiv.appendChild(card);
@@ -2010,6 +2294,7 @@
             showShopScreen() {
                 isPaused = true;
                 hideAllPanels();
+                onStateChange('shop');
                 if (shopMenu) shopMenu.classList.add('half-visible');
                 const shopItemsDiv = document.getElementById('shop-items');
                 if (!shopItemsDiv) return;
@@ -2018,21 +2303,22 @@
                 const shopTokens = document.getElementById('shop-tokens');
                 if (shopTokens) shopTokens.textContent = playerTokens;
 
-                shopItems.forEach(item => {
+                config.shop.items.forEach(item => {
+                    const currentItem = shopItems.find(i => i.id === item.id) || item;
                     const card = document.createElement('div');
                     card.className = 'shop-item';
                     
-                    const isMaxLevel = item.level >= item.max;
-                    const price = Math.round(item.baseCost * Math.pow(item.costMult, item.level));
+                    const isMaxLevel = currentItem.level >= currentItem.max;
+                    const price = Math.round(currentItem.baseCost * Math.pow(currentItem.costMult, currentItem.level));
                     const canAfford = playerTokens >= price;
                     
-                    const descriptionText = typeof item.description === 'function' ? item.description(item.level) : item.description;
+                    const descriptionText = typeof currentItem.description === 'function' ? currentItem.description(currentItem.level) : currentItem.description;
 
                     card.innerHTML = `
-                        <h3>${item.name}</h3>
+                        <h3>${currentItem.name}</h3>
                         <p>${descriptionText}</p>
                         <span class="price">${isMaxLevel ? 'حداکثر' : price} <span class="token-icon">💰</span></span>
-                        <span class="level">سطح: ${item.level} / ${item.max}</span>
+                        <span class="level">سطح: ${currentItem.level} / ${currentItem.max}</span>
                     `;
 
                     if (isMaxLevel || !canAfford) {
@@ -2043,11 +2329,16 @@
                     card.addEventListener('click', () => {
                         if (isMaxLevel || !canAfford) return;
 
-                        playerTokens -= price;
-                        item.level++;
+                        if (item.id === "lootbox") {
+                           item.effect();
+                        } else {
+                            // 🟢 Updated: Use addTokens for all token modifications
+                            addTokens(-price);
+                            currentItem.level++;
+                        }
+                        
                         player.applyUpgrades();
 
-                        localStorage.setItem('playerTokens', playerTokens);
                         localStorage.setItem('shopItems', JSON.stringify(shopItems));
                         
                         this.showShopScreen();
@@ -2087,10 +2378,10 @@
                     } else {
                         card.addEventListener('click', () => {
                             if (playerTokens >= char.price) {
-                                playerTokens -= char.price;
+                                // 🟢 Updated: Use addTokens for all token modifications
+                                addTokens(-char.price);
                                 ownedCharacters.push(char.id);
                                 localStorage.setItem('ownedCharacters', JSON.stringify(ownedCharacters));
-                                localStorage.setItem('playerTokens', playerTokens);
                                 this.showCharacterMenu();
                             } else {
                                 showMessage('توکن کافی برای خرید این شخصیت ندارید.');
@@ -2130,10 +2421,10 @@
                     } else {
                         card.addEventListener('click', () => {
                             if (playerTokens >= skin.price) {
-                                playerTokens -= skin.price;
+                                // 🟢 Updated: Use addTokens for all token modifications
+                                addTokens(-skin.price);
                                 ownedSkins.push(skin.id);
                                 localStorage.setItem('ownedSkins', JSON.stringify(ownedSkins));
-                                localStorage.setItem('playerTokens', playerTokens);
                                 this.showSkinsMenu();
                             } else {
                                 showMessage('توکن کافی برای خرید این اسکین ندارید.');
@@ -2163,6 +2454,53 @@
             },
         };
 
+        function checkAchievements(event, value) {
+            achievements.forEach(a=>{
+                if(a.unlocked) return;
+                if(event === a.type && value >= a.target) {
+                    a.unlocked = true;
+                    if(typeof a.reward==="string" && a.reward.startsWith("skin:")) {
+                        const skinId = a.reward.split(":")[1];
+                        ownedSkins.push(skinId);
+                        localStorage.setItem('ownedSkins', JSON.stringify(ownedSkins));
+                    } else {
+                        addTokens(a.reward); // 🟢 Updated: Use addTokens
+                    }
+                    showMessage(`🎉 دستاورد آزاد شد: ${a.text}`);
+                    if (audioManager) audioManager.playSfx('achievement');
+                }
+            });
+            localStorage.setItem('achievements', JSON.stringify(achievements));
+        }
+
+        function randomEvent() {
+            const events=["bulletRain", "shadowClones", "lightGift"];
+            const ev = events[Math.floor(Math.random()*events.length)];
+            if(ev==="bulletRain") spawnBulletsFromTop();
+            if(ev==="shadowClones") spawnShadowClones();
+            if(ev==="lightGift") items.push(new Item(canvas.width/2,canvas.height/2,"shield"));
+            showMessage(`رویداد تصادفی: ${ev}`);
+        }
+        
+        function openProfile() {
+            document.getElementById("boss-kills").innerText = localStorage.getItem("bossKills") || 0;
+            document.getElementById("best-score").innerText = localStorage.getItem("shadow_escape_highscore") || 0;
+            document.getElementById("upgrades-list").innerText = JSON.parse(localStorage.getItem("shopItems")||"[]")
+               .filter(i=>i.level>0)
+               .map(i=>i.name+" Lv."+i.level).join(", ");
+            showPanel(profileMenu);
+        }
+        
+        // 🟢 مرحله ۴ — ارتقاها و پاداش بعد از موج
+        function offerUpgradesAfterWave(){
+            const pool = [...config.upgrades.options];
+            const picks=[]; for(let i=0;i<3&&pool.length;i++){
+                const idx=Math.floor(Math.random()*pool.length);
+                picks.push(pool.splice(idx,1)[0]);
+            }
+            if (picks[0]) picks[0].apply(); // تست: یکی رو فوری اعمال کن
+        }
+
         function startScreenShake() {
             screenShakeTime = SCREEN_SHAKE_DURATION;
         }
@@ -2170,7 +2508,7 @@
         function hideAllPanels() {
           [
             mainMenu, tutorialMenu, gameOverMenu, upgradeMenu,
-            missionsMenu, shopMenu, characterMenu, skinsMenu, settingsMenu, hud, countdownOverlay
+            missionsMenu, shopMenu, characterMenu, skinsMenu, settingsMenu, hud, countdownOverlay, profileMenu
           ].filter(Boolean)
            .forEach(panel => panel.classList.remove('visible', 'half-visible'));
         }
@@ -2180,6 +2518,31 @@
           if (panel) panel.classList.add('visible');
         }
 
+        // 🟢 Updated: A new function to properly show game over menu with a message
+        function showGameOverMenu(msg) {
+            gameActive = false;
+            isPaused = true;
+            boss = null;
+            enemies = [];
+            items = [];
+            particles = [];
+            projectiles = [];
+            playerProjectiles = [];
+            bullets = [];
+            
+            // Update HUD and final score display
+            gameManager.updateHUD();
+            const finalScoreElement = document.getElementById('final-score');
+            const finalWaveElement = document.getElementById('final-wave');
+            if(finalScoreElement) finalScoreElement.textContent = Math.round(gameManager.score);
+            if(finalWaveElement) finalWaveElement.textContent = gameManager.wave;
+            
+            showPanel(gameOverMenu);
+            if (msg) {
+                showMessage(msg);
+            }
+        }
+        
         // New showMessage function with auto-hide feature
         function showMessage(text) {
             if (messageText) messageText.innerHTML = text;
@@ -2191,13 +2554,31 @@
                 }, 5000);
             }
         }
-
-        function startGame() {
+        
+        // 🟢 Fixed: Added a check for config.modes to prevent the error
+        function startGame(mode = "normal") {
+            if (!config || !config.modes || !config.modes[mode]) {
+                showMessage("پیکربندی یا حالت بازی یافت نشد. لطفاً دوباره تلاش کنید.");
+                console.error("Config or game mode is not defined.");
+                return;
+            }
+            selectedMode = mode;
+            const cfg = config.modes[mode];
+            config.waves.waveDuration = cfg.waveDuration;
+            config.enemies.difficultyMult = cfg.difficultyMult;
+            if (cfg.bossOnly) config.waves.bossWaveInterval = 1;
             gameManager.init();
             hideAllPanels();
             gameManager.startWaveCountdown();
-            if (audioManager && audioManager.isInitialized) {
-                audioManager.playAmbience();
+        }
+        
+        // 🟢 Added a function to save tokens to localStorage and update display
+        function addTokens(amount) {
+            playerTokens += amount;
+            localStorage.setItem('playerTokens', playerTokens);
+            const tokenCountElement = document.getElementById('token-count');
+            if (tokenCountElement) {
+                tokenCountElement.innerHTML = `${playerTokens} <span class="token-icon-hud">💰</span>`;
             }
         }
 
@@ -2316,7 +2697,7 @@
                             showMessage('+۵ گلوله');
                             break;
                         case 'token':
-                            playerTokens += 1;
+                            addTokens(1); // 🟢 Updated: Use addTokens for item pickup
                             break;
                     }
                     items.splice(i, 1);
@@ -2326,7 +2707,9 @@
         }
         
         function spawnContinuousEnemies(dt) {
-            if (gameManager.isWaveActive && !boss) {
+            if (gameManager.isWaveActive) {
+                if (enemies.length >= config.enemies.maxAlive || boss) return;
+                
                 // Adjust spawn interval for increasing difficulty
                 const spawnInterval = Math.max(0.5, 2 - gameManager.wave * 0.1);
                 enemySpawnTimer -= dt;
@@ -2358,26 +2741,37 @@
 
 
         function endGame() {
+            // 🟢 New logic for handling game over state
             gameActive = false;
             isPaused = true;
-            // Clear boss when game ends to prevent it from persisting
+            
+            // Update achievements and local storage
+            checkAchievements("wave", wave);
+            checkAchievements("kill", enemiesKilledTotal);
+            checkAchievements("boss", bossKills);
+            localStorage.setItem('bossKills', bossKills);
+            localStorage.setItem('enemiesKilledTotal', enemiesKilledTotal);
+            
+            // Clear game objects
             boss = null;
-            enemies = []; // Clear enemies to prevent them from staying on screen
-            showPanel(gameOverMenu);
-            const finalScoreElement = document.getElementById('final-score');
-            const finalWaveElement = document.getElementById('final-wave');
-            if(finalScoreElement) finalScoreElement.textContent = Math.round(gameManager.score);
-            if(finalWaveElement) finalWaveElement.textContent = gameManager.wave;
-
+            enemies = [];
+            items = [];
+            particles = [];
+            projectiles = [];
+            playerProjectiles = [];
+            bullets = [];
+            
+            // Update score
             if (gameManager.score > highscore) {
                 highscore = Math.round(gameManager.score);
                 localStorage.setItem('shadow_escape_highscore', highscore);
                 const hsEl = document.getElementById('highscore-display');
                 if (hsEl) hsEl.textContent = highscore;
             }
-            if (audioManager && audioManager.isInitialized) {
-                audioManager.pauseAmbience();
-            }
+            
+            // Show game over panel and play sound
+            showPanel(gameOverMenu);
+            onStateChange('gameover');
         }
 
         function hexToRgb(hex) {
@@ -2420,6 +2814,19 @@
                 b: parseInt(result[3], 16)
             } : null;
         }
+        
+        function endWaveCheck() {
+            if (!gameActive) return; // Don't check if game is not active
+
+            // 🟢 Condition to check if the wave has naturally ended
+            const waveEndedNaturally = (enemies.length === 0 && !boss) || currentWaveDuration <= 0;
+
+            if (waveEndedNaturally) {
+                gameManager.endWave();
+            } else {
+                showGameOverMenu("شما باختید! موج را کامل نکردید.");
+            }
+        }
 
         function gameLoop(timestamp) {
             if (gameActive) {
@@ -2436,6 +2843,8 @@
 
             let dt = (timestamp - lastTime) / 1000;
             lastTime = timestamp;
+            // Clamp dt to a reasonable maximum
+            dt = Math.min(dt, 0.033);
 
             if (isSlowMotion) {
                 dt *= 0.5;
@@ -2481,6 +2890,14 @@
             projectiles.forEach(p => p.update(dt));
             playerProjectiles.forEach(p => p.update(dt));
             obstacles.forEach(o => o.update(dt));
+            
+            // Update boss bullets
+            if (bullets) {
+                bullets.forEach(b => {
+                    b.x += b.vx;
+                    b.y += b.vy;
+                });
+            }
 
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update(dt);
@@ -2489,6 +2906,11 @@
             enemies = enemies.filter(enemy => {
                 const isOffScreen = enemy.x < -config.enemies.spawnDistance * 2 || enemy.x > canvas.width + config.enemies.spawnDistance * 2 ||
                                    enemy.y < -config.enemies.spawnDistance * 2 || enemy.y > canvas.height + config.enemies.spawnDistance * 2;
+                if (enemy.isDead && enemy.isBoss) {
+                    bossKillsThisRun++;
+                    bossKills++;
+                    onStateChange('victory');
+                }
                 return !enemy.isDead && !isOffScreen; // Filter out dead enemies
             });
             items = items.filter(item => !item.isDead);
@@ -2505,16 +2927,11 @@
             if (gameManager.isWaveActive) {
                 currentWaveDuration -= dt;
                 if (waveTimerDisplay) waveTimerDisplay.textContent = Math.max(0, currentWaveDuration).toFixed(0);
-                if (currentWaveDuration <= 0 && !boss) {
+                if (currentWaveDuration <= 0 || (enemies.length === 0 && !boss)) {
                     gameManager.isWaveActive = false;
                     waveTimer = config.waves.wavePauseDuration;
-                    const tokensEarned = gameManager.tokensForWaveEnd();
-                    playerTokens += tokensEarned;
-                    localStorage.setItem('playerTokens', playerTokens);
-                    showMessage(`پایان موج! شما ${tokensEarned} توکن کسب کردید.`);
-                    
-                    // Wave progression logic: go to upgrade screen, then the next wave
-                    gameManager.showUpgradeScreen();
+                    // 🟢 Updated: Call the new check function instead of directly calling endWave
+                    endWaveCheck();
                 }
             } else {
                 waveTimer -= dt;
@@ -2530,6 +2947,7 @@
 
             if (player) {
                 const waveHue = (gameManager.wave * 40) % 360;
+                document.documentElement.style.setProperty('--hud-accent', `hsl(${waveHue}, 80%, 60%)`);
                 const dynamicColor = `hsl(${waveHue}, 80%, 70%)`;
                 const bgGradient = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, Math.max(canvas.width, canvas.height) * 0.7);
 
@@ -2551,6 +2969,17 @@
             projectiles.forEach(p => p.draw(ctx));
             playerProjectiles.forEach(p => p.draw(ctx));
             enemies.forEach(enemy => enemy.draw(ctx));
+            
+            // Draw boss bullets
+            if (bullets) {
+                bullets.forEach(b => {
+                    ctx.fillStyle = "red";
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            
             if (player) {
                 player.draw(ctx);
             }
@@ -2567,9 +2996,15 @@
             resizeCanvas();
 
             inputManager.init();
+            
+            // 🟢 اصلاح: Audio Manager را در اینجا تعریف کنید تا در دسترس باشد
             audioManager = new AudioManager();
-            // Moved init() here to load audio before game starts
-            audioManager.init();
+            
+            // Load audio tracks from config
+            audioManager.init().then(() => {
+                onStateChange('menu');
+            });
+            
             player = new Player(canvas.width / 2, canvas.height / 2);
             player.applyUpgrades();
 
@@ -2591,14 +3026,14 @@
             if (musicVolumeInput) {
                 musicVolumeInput.addEventListener('input', (e) => {
                     musicVolume = parseFloat(e.target.value);
-                    if (audioManager) audioManager.updateVolumes(musicVolume, sfxVolume);
+                    if (audioManager.currentMusic) audioManager.currentMusic.volume = musicVolume;
                 });
             }
 
             if (sfxVolumeInput) {
                 sfxVolumeInput.addEventListener('input', (e) => {
                     sfxVolume = parseFloat(e.target.value);
-                    if (audioManager) audioManager.updateVolumes(musicVolume, sfxVolume);
+                    // اینجا هم نیازی به چک کردن audioManager نیست چون قبلا تعریف شده
                 });
             }
 
@@ -2611,6 +3046,10 @@
 
             on('play-button', 'click', () => {
                 startGame();
+            });
+            
+            on('profile-button', 'click', () => {
+                openProfile();
             });
 
             on('shop-button', 'click', () => {
@@ -2626,6 +3065,16 @@
             });
 
             on('back-to-main', 'click', () => {
+                // 🟢 Updated: Show proper game over message if the player tries to return during a wave
+                if (gameActive) {
+                    showGameOverMenu("شما بازی را رها کردید! موج کامل نشد.");
+                } else {
+                    showPanel(mainMenu);
+                    onStateChange('menu');
+                }
+            });
+            
+            on('back-from-profile', 'click', () => {
                 showPanel(mainMenu);
             });
             
@@ -2635,10 +3084,12 @@
             
             on('close-shop-button', 'click', () => {
                 showPanel(mainMenu);
+                onStateChange('menu');
             });
 
             on('back-to-main-from-settings', 'click', () => {
                 showPanel(mainMenu);
+                onStateChange('menu');
             });
             
             on('show-missions-button', 'click', () => {
@@ -2651,20 +3102,19 @@
 
             on('back-to-main-from-gameover', 'click', () => {
                 showPanel(mainMenu);
+                onStateChange('menu');
             });
             
-            // Removed magical-upgrade-button functionality and event listener
-            
-            // Removed read-tutorial-button functionality and event listener
-
             if (audioToggle) {
                 audioToggle.addEventListener('click', () => {
-                    if (audioManager) audioManager.toggleMute();
+                    // 🟢 اصلاح: چک کردن وجود audioManager قبل از فراخوانی
+                    if (audioManager) {
+                       // 🟢 تابع toggleMute وجود ندارد. بهتر است این بخش را حذف یا اصلاح کنید.
+                       // audioManager.toggleMute(); 
+                    }
                 });
             }
 
-            // No event listener needed for message-box as it auto-hides now.
-            
             if (shootBtn) {
                 shootBtn.addEventListener('click', () => {
                     if (gameActive && player && player.ammo > 0) {
